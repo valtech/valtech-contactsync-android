@@ -6,15 +6,15 @@ import android.content.Intent;
 import android.os.IBinder;
 
 public class AuthenticatorService extends Service {
-    private AbstractAccountAuthenticator authenticator;
+  private AbstractAccountAuthenticator authenticator;
 
-    @Override
-    public void onCreate() {
-        this.authenticator = new Authenticator(this);
-    }
+  @Override
+  public void onCreate() {
+    this.authenticator = new Authenticator(this);
+  }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return authenticator.getIBinder();
-    }
+  @Override
+  public IBinder onBind(Intent intent) {
+    return authenticator.getIBinder();
+  }
 }
