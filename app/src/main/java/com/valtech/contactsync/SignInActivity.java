@@ -11,7 +11,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class SignInActivity extends AccountAuthenticatorActivity {
-  public static final String ACCOUNT_TYPE = "com.valtech.contactsync.account";
+  private static final int SYNC_INTERVAL = 4 * 3600 * 1000;
+
   private ApiClient apiClient = new ApiClient();
 
   @Override
@@ -54,13 +55,22 @@ public class SignInActivity extends AccountAuthenticatorActivity {
       ApiClient.UserInfoResponse userInfoResponse = apiClient.getUserInfoMeResource(tokenResponse.accessToken);
 
       AccountManager accountManager = AccountManager.get(SignInActivity.this);
-      Account account = new Account(userInfoResponse.email, ACCOUNT_TYPE);
+      Account account = new Account(userInfoResponse.email, getString(R.string.account_type));
       accountManager.addAccountExplicitly(account, tokenResponse.refreshToken, null);
+
+//      ContentResolver.setIsSyncable(account, ContactsContract.AUTHORITY, 1);
+//      ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
+
+      //ContentResolver.addPeriodicSync(account, getString(R.string.account_authority), null, SYNC_INTERVAL);
+//
+//      Bundle settings = new Bundle();
+//      settings.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+//      settings.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+//      ContentResolver.requestSync(account, getString(R.string.account_authority), settings);
 
       Bundle result = new Bundle();
       result.putString(AccountManager.KEY_ACCOUNT_NAME, userInfoResponse.email);
-      result.putString(AccountManager.KEY_ACCOUNT_TYPE, ACCOUNT_TYPE);
-      //result.putString(AccountManager.KEY_AUTHTOKEN, tokenResponse.refreshToken);
+      result.putString(AccountManager.KEY_ACCOUNT_TYPE, getString(R.string.account_type));
       return result;
     }
 

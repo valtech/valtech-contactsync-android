@@ -34,7 +34,11 @@ public class Authenticator extends AbstractAccountAuthenticator {
 
   @Override
   public Bundle getAuthToken(AccountAuthenticatorResponse response, Account account, String authTokenType, Bundle options) throws NetworkErrorException {
-    throw new UnsupportedOperationException();
+    Bundle bundle = new Bundle();
+    bundle.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
+    bundle.putString(AccountManager.KEY_ACCOUNT_TYPE, context.getString(R.string.account_type));
+    bundle.putString(AccountManager.KEY_AUTHTOKEN, AccountManager.get(context).getPassword(account));
+    return bundle;
   }
 
   @Override
