@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.util.HashMap;
+
 public class SignInActivity extends AccountAuthenticatorActivity {
   private static final int SYNC_INTERVAL = 4 * 3600 * 1000;
 
@@ -25,7 +27,7 @@ public class SignInActivity extends AccountAuthenticatorActivity {
     webview.setWebViewClient(client);
     setContentView(webview);
 
-    webview.loadUrl(apiClient.getAuthorizeUrl());
+    webview.loadUrl(apiClient.getAuthorizeUrl(), new HashMap<String, String>() {{ put("X-Idp-Client-Type", "native"); }});
   }
 
   private class IdpWebViewClient extends WebViewClient {
