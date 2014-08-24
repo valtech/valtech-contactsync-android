@@ -2,6 +2,7 @@ package com.valtech.contactsync;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -14,6 +15,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,7 +88,11 @@ public class ApiClient {
     return getProtectedResource(USER_INFO_URL, accessToken, UserInfoResponse.class);
   }
 
-  private <T> T getProtectedResource(String url, String accessToken, Class<T> clazz) {
+  public List<UserInfoResponse> getUserInfoResources(String accessToken) {
+    return getProtectedResource(ALL_USER_INFOS_URL, accessToken, new TypeToken<List<UserInfoResponse>>(){}.getType());
+  }
+
+  private <T> T getProtectedResource(String url, String accessToken, Type type) {
     HttpClient httpClient = new DefaultHttpClient();
     HttpGet httpGet = new HttpGet(url);
 
@@ -103,7 +109,7 @@ public class ApiClient {
       }
 
       String json = EntityUtils.toString(response.getEntity());
-      T typedResponse = GSON.fromJson(json, clazz);
+      T typedResponse = GSON.fromJson(json, type);
 
       return typedResponse;
     } catch (IOException e) {
@@ -128,6 +134,16 @@ public class ApiClient {
 
   public static class UserInfoResponse {
     public String email;
+    public String name;
+
+    @SerializedName("country_code")
+    public String countryCode;
+
+    @SerializedName("phone_number")
+    public String phoneNumber;
+
+    @SerializedName("fixed_phone_number")
+    public String fixedPhoneNumber;
   }
 
   public static class OAuthException extends RuntimeException {
