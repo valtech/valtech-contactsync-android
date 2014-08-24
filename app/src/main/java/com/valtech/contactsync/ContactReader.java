@@ -9,6 +9,7 @@ import android.net.Uri;
 import java.util.HashMap;
 import java.util.Map;
 
+import static android.provider.ContactsContract.CommonDataKinds;
 import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import static android.provider.ContactsContract.RawContacts;
 
@@ -41,7 +42,7 @@ public class ContactReader {
     Cursor cursor = null;
     try {
       cursor = resolver.query(entityUri,
-        new String[]{RawContacts.SOURCE_ID, RawContacts.Entity.DATA_ID, RawContacts.Entity.MIMETYPE, StructuredName.DATA1},
+        new String[] { RawContacts.SOURCE_ID, RawContacts.Entity.DATA_ID, RawContacts.Entity.MIMETYPE, StructuredName.DATA1, StructuredName.DATA2 },
         null, null, null);
 
       Contact contact = new Contact();
@@ -53,7 +54,11 @@ public class ContactReader {
           // The SOURCE_ID is duplicated for each row.
           // We can know what type of data this row contains by looking at its mime type
           String mimeType = cursor.getString(2);
+          int subType = cursor.getInt(4);
           if (StructuredName.CONTENT_ITEM_TYPE.equals(mimeType)) contact.displayName = cursor.getString(3);
+          if (CommonDataKinds.Email.CONTENT_ITEM_TYPE.equals(mimeType)) contact.email = cursor.getString(3);
+          if (CommonDataKinds.Phone.CONTENT_ITEM_TYPE.equals(mimeType) && CommonDataKinds.Phone.TYPE_WORK_MOBILE == subType) contact.phoneNumber = cursor.getString(3);
+          if (CommonDataKinds.Phone.CONTENT_ITEM_TYPE.equals(mimeType) && CommonDataKinds.Phone.TYPE_WORK == subType) contact.fixedPhoneNumber = cursor.getString(3);
         }
       }
       return contact;
@@ -66,5 +71,8 @@ public class ContactReader {
     public long rawContactid;
     public String sourceId;
     public String displayName;
+    public String email;
+    public String phoneNumber;
+    public String fixedPhoneNumber;
   }
 }

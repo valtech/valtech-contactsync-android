@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.util.*;
 
+import static android.provider.ContactsContract.CommonDataKinds;
 import static android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import static android.provider.ContactsContract.Data;
@@ -66,12 +67,38 @@ public class ContactRepository {
       .withValue(RawContacts.SOURCE_ID, employee.email)
       .build());
 
+    // Name
     ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
       .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
       .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
       .withValue(StructuredName.DISPLAY_NAME, employee.name)
       .build());
 
+    // Email
+    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+      .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+      .withValue(Data.MIMETYPE, CommonDataKinds.Email.CONTENT_ITEM_TYPE)
+      .withValue(CommonDataKinds.Email.DATA, employee.email)
+      .withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK)
+      .build());
+
+    // Mobile phone
+    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+      .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+      .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+      .withValue(CommonDataKinds.Phone.NUMBER, employee.phoneNumber)
+      .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK_MOBILE)
+      .build());
+
+    // Fixed phone
+    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+      .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+      .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+      .withValue(CommonDataKinds.Phone.NUMBER, employee.fixedPhoneNumber)
+      .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK)
+      .build());
+
+    // It is nice if the contact is part of a group, and this makes the contact visible
     ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
       .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
       .withValue(Data.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE)
