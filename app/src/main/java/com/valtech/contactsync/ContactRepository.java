@@ -8,11 +8,9 @@ import android.util.Log;
 
 import java.util.*;
 
-import static android.provider.ContactsContract.CommonDataKinds;
+import static android.provider.ContactsContract.*;
 import static android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
-import static android.provider.ContactsContract.Data;
-import static android.provider.ContactsContract.RawContacts;
 
 public class ContactRepository {
   private static final String TAG = ContactRepository.class.getSimpleName();
@@ -31,12 +29,11 @@ public class ContactRepository {
 
     Set<String> activeEmails = new HashSet<>();
     for (ApiClient.UserInfoResponse employee : employees) {
-      if (storedContacts.containsKey(employee.email)) {
-        Log.i(TAG, "Updating existing contact " + employee.email);
-        updateExistingContact(account, employee);
+      ContactReader.Contact storedContact = storedContacts.get(employee.email);
+      if (storedContact != null) {
+        updateExistingContact(account, storedContact, employee);
         syncResult.stats.numUpdates++;
       } else {
-        Log.i(TAG, "Inserting new contact " + employee.email);
         insertNewContact(account, groupId, employee);
         syncResult.stats.numInserts++;
       }
@@ -47,17 +44,58 @@ public class ContactRepository {
 
     for (ContactReader.Contact storedContact : storedContacts.values()) {
       if (activeEmails.contains(storedContact.sourceId)) continue;
-
-      Log.i(TAG, "Deleting inactive contact " + storedContact.sourceId);
       deleteInactiveContact(account, storedContact);
+      syncResult.stats.numDeletes++;
+      syncResult.stats.numEntries++;
     }
   }
 
-  private void updateExistingContact(Account account, ApiClient.UserInfoResponse employee) {
-    // TODO:
+  private void updateExistingContact(Account account, ContactReader.Contact storedContact, ApiClient.UserInfoResponse employee) {
+    Log.i(TAG, "Updating existing contact " + employee.email);
+
+    ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+
+    // TODO: This doesn't seem to work
+
+    // Name
+    ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
+      .withSelection(Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?", new String[] { String.valueOf(storedContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE })
+      .withValue(StructuredName.DISPLAY_NAME, employee.name)
+      .build());
+
+    // Email
+    ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
+      .withSelection(Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?", new String[] { String.valueOf(storedContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE })
+      .withValue(CommonDataKinds.Email.DATA, employee.email)
+      .withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK)
+      .build());
+
+    // Mobile phone
+    ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
+      .withSelection(
+        Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
+        new String[] { String.valueOf(storedContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
+      .withValue(CommonDataKinds.Phone.NUMBER, employee.phoneNumber)
+      .build());
+
+    // Fixed phone
+    ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
+      .withSelection(
+        Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
+        new String[] { String.valueOf(storedContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
+      .withValue(CommonDataKinds.Phone.NUMBER, employee.fixedPhoneNumber)
+      .build());
+
+    try {
+      resolver.applyBatch(ContactsContract.AUTHORITY, ops);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void insertNewContact(Account account, long groupId, ApiClient.UserInfoResponse employee) {
+    Log.i(TAG, "Inserting new contact " + employee.email);
+
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
     final int backReferenceIndex = 0;
 
@@ -107,14 +145,30 @@ public class ContactRepository {
 
     try {
       resolver.applyBatch(ContactsContract.AUTHORITY, ops);
-
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
   private void deleteInactiveContact(Account account, ContactReader.Contact storedContact) {
-    // TODO:
+    Log.i(TAG, "Deleting inactive contact " + storedContact.sourceId);
+
+    ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+    ops.add(ContentProviderOperation.newDelete(
+      ContactsContract.RawContacts.CONTENT_URI.buildUpon()
+        .appendPath(String.valueOf(storedContact.rawContactId))
+          // Appending this query parameter is what actually deletes the raw contact.
+          // Without it, the contact would just be "hidden", treated as deleted by the user but not yet synced to the server.
+          // http://developer.android.com/reference/android/provider/ContactsContract.RawContacts.html
+        .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
+        .build())
+      .build());
+
+    try {
+      resolver.applyBatch(ContactsContract.AUTHORITY, ops);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private long ensureGroup(Account account) {

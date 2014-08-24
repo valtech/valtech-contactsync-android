@@ -46,7 +46,7 @@ public class ContactReader {
         null, null, null);
 
       Contact contact = new Contact();
-      contact.rawContactid = rawContactId;
+      contact.rawContactId = rawContactId;
       while (cursor.moveToNext()) {
         contact.sourceId = cursor.getString(0);
         if (!cursor.isNull(1)) {
@@ -68,7 +68,7 @@ public class ContactReader {
   }
 
   public static class Contact {
-    public long rawContactid;
+    public long rawContactId;
     public String sourceId;
     public String displayName;
     public String email;

@@ -45,6 +45,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
       contactRepository.syncContacts(account, seEmployees, syncResult);
 
+      Log.i(TAG, "Sync complete: " + syncResult.stats.toString());
+
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

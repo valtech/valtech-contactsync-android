@@ -7,12 +7,14 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import java.util.HashMap;
 
 public class SignInActivity extends AccountAuthenticatorActivity {
+  private static final String TAG = SignInActivity.class.getSimpleName();
   private static final int SYNC_INTERVAL = 4 * 3600 * 1000;
 
   private ApiClient apiClient = new ApiClient();
@@ -57,6 +59,8 @@ public class SignInActivity extends AccountAuthenticatorActivity {
     protected Bundle doInBackground(String... params) {
       ApiClient.TokenResponse tokenResponse = apiClient.getAccessTokenAndRefreshToken(params[0]);
       ApiClient.UserInfoResponse userInfoResponse = apiClient.getUserInfoMeResource(tokenResponse.accessToken);
+
+      Log.i(TAG, "Signing in as user " + userInfoResponse.email + " in country " + userInfoResponse.countryCode);
 
       AccountManager accountManager = AccountManager.get(SignInActivity.this);
       Account account = new Account(userInfoResponse.email, getString(R.string.account_type));
