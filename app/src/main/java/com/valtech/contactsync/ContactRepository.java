@@ -4,57 +4,90 @@ import android.accounts.Account;
 import android.content.*;
 import android.database.Cursor;
 import android.provider.ContactsContract;
+import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
+import static android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import static android.provider.ContactsContract.Data;
 import static android.provider.ContactsContract.RawContacts;
 
 public class ContactRepository {
-  private final Context context;
+  private static final String TAG = ContactRepository.class.getSimpleName();
+
   private final ContentResolver resolver;
+  private final ContactReader contactReader;
 
   public ContactRepository(Context context) {
-    this.context = context;
     this.resolver = context.getContentResolver();
+    this.contactReader = new ContactReader(resolver);
   }
 
   public void syncContacts(Account account, List<ApiClient.UserInfoResponse> employees, SyncResult syncResult) {
     long groupId = ensureGroup(account);
+    Map<String, ContactReader.Contact> storedContacts = contactReader.getStoredContacts(account);
 
+    Set<String> activeEmails = new HashSet<>();
     for (ApiClient.UserInfoResponse employee : employees) {
-      ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-      final int backReferenceIndex = 0;
-
-      ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI)
-        .withValue(RawContacts.ACCOUNT_TYPE, account.type)
-        .withValue(RawContacts.ACCOUNT_NAME, account.name)
-        .withValue(RawContacts.SOURCE_ID, employee.email)
-        .build());
-
-      ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
-        .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
-        .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
-        .withValue(StructuredName.DISPLAY_NAME, employee.name)
-        .build());
-
-      ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
-        .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
-        .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE)
-        .withValue(ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID, groupId)
-        .build());
-
-      try {
-        resolver.applyBatch(ContactsContract.AUTHORITY, ops);
+      if (storedContacts.containsKey(employee.email)) {
+        Log.i(TAG, "Updating existing contact " + employee.email);
+        updateExistingContact(account, employee);
+        syncResult.stats.numUpdates++;
+      } else {
+        Log.i(TAG, "Inserting new contact " + employee.email);
+        insertNewContact(account, groupId, employee);
         syncResult.stats.numInserts++;
-        syncResult.stats.numEntries++;
-      } catch (Exception e) {
-        throw new RuntimeException(e);
       }
+      syncResult.stats.numEntries++;
+
+      activeEmails.add(employee.email);
     }
+
+    for (ContactReader.Contact storedContact : storedContacts.values()) {
+      if (activeEmails.contains(storedContact.sourceId)) continue;
+
+      Log.i(TAG, "Deleting inactive contact " + storedContact.sourceId);
+      deleteInactiveContact(account, storedContact);
+    }
+  }
+
+  private void updateExistingContact(Account account, ApiClient.UserInfoResponse employee) {
+    // TODO:
+  }
+
+  private void insertNewContact(Account account, long groupId, ApiClient.UserInfoResponse employee) {
+    ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+    final int backReferenceIndex = 0;
+
+    ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI)
+      .withValue(RawContacts.ACCOUNT_TYPE, account.type)
+      .withValue(RawContacts.ACCOUNT_NAME, account.name)
+      .withValue(RawContacts.SOURCE_ID, employee.email)
+      .build());
+
+    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+      .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+      .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
+      .withValue(StructuredName.DISPLAY_NAME, employee.name)
+      .build());
+
+    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+      .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+      .withValue(Data.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE)
+      .withValue(GroupMembership.GROUP_ROW_ID, groupId)
+      .build());
+
+    try {
+      resolver.applyBatch(ContactsContract.AUTHORITY, ops);
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void deleteInactiveContact(Account account, ContactReader.Contact storedContact) {
+    // TODO:
   }
 
   private long ensureGroup(Account account) {
