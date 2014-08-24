@@ -21,13 +21,15 @@ public class SignInActivity extends AccountAuthenticatorActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    WebView webview = new WebView(this);
+    WebView webView = new WebView(this);
     WebViewClient client = new IdpWebViewClient();
-    client.onPageFinished(webview, "vidp://callback");
-    webview.setWebViewClient(client);
-    setContentView(webview);
+    webView.getSettings().setJavaScriptEnabled(true);
+    webView.setWebViewClient(client);
+    setContentView(webView);
 
-    webview.loadUrl(apiClient.getAuthorizeUrl(), new HashMap<String, String>() {{ put("X-Idp-Client-Type", "native"); }});
+    webView.loadUrl(apiClient.getAuthorizeUrl(), new HashMap<String, String>() {{
+      put("X-Idp-Client-Type", "native");
+    }});
   }
 
   private class IdpWebViewClient extends WebViewClient {
