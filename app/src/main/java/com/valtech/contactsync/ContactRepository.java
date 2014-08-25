@@ -3,6 +3,7 @@ package com.valtech.contactsync;
 import android.accounts.Account;
 import android.content.*;
 import android.database.Cursor;
+import android.net.Uri;
 import android.provider.ContactsContract;
 import android.util.Log;
 
@@ -14,6 +15,10 @@ import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
 
 public class ContactRepository {
   private static final String TAG = ContactRepository.class.getSimpleName();
+
+  // Appending this query parameter means we perform as operations as a sync adapter, not as a user.
+  // http://developer.android.com/reference/android/provider/ContactsContract.html#CALLER_IS_SYNCADAPTER
+  private static final Uri DATA_CONTENT_URI = Data.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
 
   private final ContentResolver resolver;
   private final ContactReader contactReader;
@@ -31,7 +36,7 @@ public class ContactRepository {
     for (ApiClient.UserInfoResponse employee : employees) {
       ContactReader.Contact storedContact = storedContacts.get(employee.email);
       if (storedContact != null) {
-        updateExistingContact(account, storedContact, employee);
+        updateExistingContact(storedContact, employee);
         syncResult.stats.numUpdates++;
       } else {
         insertNewContact(account, groupId, employee);
@@ -44,34 +49,36 @@ public class ContactRepository {
 
     for (ContactReader.Contact storedContact : storedContacts.values()) {
       if (activeEmails.contains(storedContact.sourceId)) continue;
-      deleteInactiveContact(account, storedContact);
+      deleteInactiveContact(storedContact);
       syncResult.stats.numDeletes++;
       syncResult.stats.numEntries++;
     }
   }
 
-  private void updateExistingContact(Account account, ContactReader.Contact storedContact, ApiClient.UserInfoResponse employee) {
+  private void updateExistingContact(ContactReader.Contact storedContact, ApiClient.UserInfoResponse employee) {
     Log.i(TAG, "Updating existing contact " + employee.email);
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
-    // TODO: This doesn't seem to work
-
     // Name
-    ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
-      .withSelection(Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?", new String[] { String.valueOf(storedContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE })
+    ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
+      .withSelection(
+        Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
+        new String[] { String.valueOf(storedContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE })
       .withValue(StructuredName.DISPLAY_NAME, employee.name)
       .build());
 
     // Email
-    ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
-      .withSelection(Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?", new String[] { String.valueOf(storedContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE })
+    ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
+      .withSelection(
+        Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
+        new String[]{String.valueOf(storedContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE})
       .withValue(CommonDataKinds.Email.DATA, employee.email)
       .withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK)
       .build());
 
     // Mobile phone
-    ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
+    ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
         new String[] { String.valueOf(storedContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
@@ -79,7 +86,7 @@ public class ContactRepository {
       .build());
 
     // Fixed phone
-    ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
+    ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
         new String[] { String.valueOf(storedContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
@@ -99,21 +106,21 @@ public class ContactRepository {
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
     final int backReferenceIndex = 0;
 
-    ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI)
+    ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build())
       .withValue(RawContacts.ACCOUNT_TYPE, account.type)
       .withValue(RawContacts.ACCOUNT_NAME, account.name)
       .withValue(RawContacts.SOURCE_ID, employee.email)
       .build());
 
     // Name
-    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+    ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
       .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
       .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
       .withValue(StructuredName.DISPLAY_NAME, employee.name)
       .build());
 
     // Email
-    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+    ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
       .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
       .withValue(Data.MIMETYPE, CommonDataKinds.Email.CONTENT_ITEM_TYPE)
       .withValue(CommonDataKinds.Email.DATA, employee.email)
@@ -121,7 +128,7 @@ public class ContactRepository {
       .build());
 
     // Mobile phone
-    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+    ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
       .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
       .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
       .withValue(CommonDataKinds.Phone.NUMBER, employee.phoneNumber)
@@ -129,7 +136,7 @@ public class ContactRepository {
       .build());
 
     // Fixed phone
-    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+    ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
       .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
       .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
       .withValue(CommonDataKinds.Phone.NUMBER, employee.fixedPhoneNumber)
@@ -137,7 +144,7 @@ public class ContactRepository {
       .build());
 
     // It is nice if the contact is part of a group, and this makes the contact visible
-    ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+    ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
       .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
       .withValue(Data.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE)
       .withValue(GroupMembership.GROUP_ROW_ID, groupId)
@@ -150,7 +157,7 @@ public class ContactRepository {
     }
   }
 
-  private void deleteInactiveContact(Account account, ContactReader.Contact storedContact) {
+  private void deleteInactiveContact(ContactReader.Contact storedContact) {
     Log.i(TAG, "Deleting inactive contact " + storedContact.sourceId);
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
