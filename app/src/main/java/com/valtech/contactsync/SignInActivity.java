@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Window;
+import android.webkit.CookieManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -26,7 +28,10 @@ public class SignInActivity extends AccountAuthenticatorActivity {
     WebView webView = new WebView(this);
     WebViewClient client = new IdpWebViewClient();
     webView.getSettings().setJavaScriptEnabled(true);
+    webView.getSettings().setSaveFormData(false);
     webView.setWebViewClient(client);
+    CookieManager.getInstance().removeAllCookie();
+    requestWindowFeature(Window.FEATURE_NO_TITLE);
     setContentView(webView);
 
     webView.loadUrl(apiClient.getAuthorizeUrl(), new HashMap<String, String>() {{
@@ -46,6 +51,9 @@ public class SignInActivity extends AccountAuthenticatorActivity {
         super.onPageStarted(view, url, favicon);
         return;
       }
+
+      // clear cookies as the sign in step is now done
+      CookieManager.getInstance().removeAllCookie();
 
       Uri uri = Uri.parse(url);
       final String code = uri.getQueryParameter("code");
