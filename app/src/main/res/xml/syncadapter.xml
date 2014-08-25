@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- supportsUploading specifies if the contact should be editable on the phone or not -->
 <sync-adapter
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:accountType="@string/account_type"
