@@ -6,7 +6,7 @@ It is connected to Valtech's identity provider (Valtech IDP).
 This app also serves to demonstrate how easy it is to integrate with Valtech IDP and its OAuth 2 interface.
 It also serves as a public, free and open source (MIT) example of how to write a Contact Provider for Android.
 
-# Local development
+## Local development
 
 1. Download the [Android SDK](http://developer.android.com/sdk/index.html)
 2. Install IntelliJ IDEA
