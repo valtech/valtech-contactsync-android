@@ -15,12 +15,12 @@ import java.util.List;
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
   private static final String TAG = SyncAdapter.class.getSimpleName();
   private final ApiClient apiClient;
-  private final ContactRepository contactRepository;
+  private final LocalContactRepository contactRepository;
 
   public SyncAdapter(Context context) {
     super(context, true);
     this.apiClient = new ApiClient();
-    this.contactRepository = new ContactRepository(context);
+    this.contactRepository = new LocalContactRepository(context);
   }
 
   @Override

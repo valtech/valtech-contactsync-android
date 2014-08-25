@@ -13,30 +13,30 @@ import static android.provider.ContactsContract.*;
 import static android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
 
-public class ContactRepository {
-  private static final String TAG = ContactRepository.class.getSimpleName();
+public class LocalContactRepository {
+  private static final String TAG = LocalContactRepository.class.getSimpleName();
 
   // Appending this query parameter means we perform as operations as a sync adapter, not as a user.
   // http://developer.android.com/reference/android/provider/ContactsContract.html#CALLER_IS_SYNCADAPTER
   private static final Uri DATA_CONTENT_URI = Data.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
 
   private final ContentResolver resolver;
-  private final ContactReader contactReader;
+  private final LocalContactReader localContactReader;
 
-  public ContactRepository(Context context) {
+  public LocalContactRepository(Context context) {
     this.resolver = context.getContentResolver();
-    this.contactReader = new ContactReader(resolver);
+    this.localContactReader = new LocalContactReader(resolver);
   }
 
   public void syncContacts(Account account, List<ApiClient.UserInfoResponse> employees, SyncResult syncResult) {
     long groupId = ensureGroup(account);
-    Map<String, ContactReader.Contact> storedContacts = contactReader.getStoredContacts(account);
+    Map<String, LocalContactReader.LocalContact> storedContacts = localContactReader.getContacts(account);
 
     Set<String> activeEmails = new HashSet<>();
     for (ApiClient.UserInfoResponse employee : employees) {
-      ContactReader.Contact storedContact = storedContacts.get(employee.email);
-      if (storedContact != null) {
-        updateExistingContact(storedContact, employee);
+      LocalContactReader.LocalContact localContact = storedContacts.get(employee.email);
+      if (localContact != null) {
+        updateExistingContact(localContact, employee);
         syncResult.stats.numUpdates++;
       } else {
         insertNewContact(account, groupId, employee);
@@ -47,15 +47,15 @@ public class ContactRepository {
       activeEmails.add(employee.email);
     }
 
-    for (ContactReader.Contact storedContact : storedContacts.values()) {
-      if (activeEmails.contains(storedContact.sourceId)) continue;
-      deleteInactiveContact(storedContact);
+    for (LocalContactReader.LocalContact localContact : storedContacts.values()) {
+      if (activeEmails.contains(localContact.sourceId)) continue;
+      deleteInactiveContact(localContact);
       syncResult.stats.numDeletes++;
       syncResult.stats.numEntries++;
     }
   }
 
-  private void updateExistingContact(ContactReader.Contact storedContact, ApiClient.UserInfoResponse employee) {
+  private void updateExistingContact(LocalContactReader.LocalContact localContact, ApiClient.UserInfoResponse employee) {
     Log.i(TAG, "Updating existing contact " + employee.email);
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
@@ -64,7 +64,7 @@ public class ContactRepository {
     ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-        new String[] { String.valueOf(storedContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE })
+        new String[] { String.valueOf(localContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE })
       .withValue(StructuredName.DISPLAY_NAME, employee.name)
       .build());
 
@@ -72,7 +72,7 @@ public class ContactRepository {
     ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-        new String[]{String.valueOf(storedContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE})
+        new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE})
       .withValue(CommonDataKinds.Email.DATA, employee.email)
       .withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK)
       .build());
@@ -81,7 +81,7 @@ public class ContactRepository {
     ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
-        new String[] { String.valueOf(storedContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
+        new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
       .withValue(CommonDataKinds.Phone.NUMBER, employee.phoneNumber)
       .build());
 
@@ -89,7 +89,7 @@ public class ContactRepository {
     ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
-        new String[] { String.valueOf(storedContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
+        new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
       .withValue(CommonDataKinds.Phone.NUMBER, employee.fixedPhoneNumber)
       .build());
 
@@ -157,13 +157,13 @@ public class ContactRepository {
     }
   }
 
-  private void deleteInactiveContact(ContactReader.Contact storedContact) {
-    Log.i(TAG, "Deleting inactive contact " + storedContact.sourceId);
+  private void deleteInactiveContact(LocalContactReader.LocalContact localContact) {
+    Log.i(TAG, "Deleting inactive contact " + localContact.sourceId);
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
     ops.add(ContentProviderOperation.newDelete(
       ContactsContract.RawContacts.CONTENT_URI.buildUpon()
-        .appendPath(String.valueOf(storedContact.rawContactId))
+        .appendPath(String.valueOf(localContact.rawContactId))
           // Appending this query parameter is what actually deletes the raw contact.
           // Without it, the contact would just be "hidden", treated as deleted by the user but not yet synced to the server.
           // http://developer.android.com/reference/android/provider/ContactsContract.RawContacts.html

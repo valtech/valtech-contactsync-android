@@ -13,40 +13,45 @@ import static android.provider.ContactsContract.CommonDataKinds;
 import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import static android.provider.ContactsContract.RawContacts;
 
-public class ContactReader {
+public class LocalContactReader {
   private final ContentResolver resolver;
 
-  public ContactReader(ContentResolver resolver) {
+  public LocalContactReader(ContentResolver resolver) {
     this.resolver = resolver;
   }
 
-  public Map<String, Contact> getStoredContacts(Account account) {
+  public Map<String, LocalContact> getContacts(Account account) {
     Cursor rawContactsCursor = null;
+
     try {
       rawContactsCursor = resolver.query(RawContacts.CONTENT_URI, new String[] { RawContacts._ID }, RawContacts.ACCOUNT_TYPE + " = ?", new String[] { account.type }, null);
-      Map<String, Contact> contacts = new HashMap<>();
+      Map<String, LocalContact> contacts = new HashMap<>();
+
       while (rawContactsCursor.moveToNext()) {
         long rawContactId = rawContactsCursor.getLong(0);
-        Contact contact = getStoredContact(rawContactId);
+        LocalContact contact = getContact(rawContactId);
         contacts.put(contact.sourceId, contact);
       }
+
       return contacts;
     } finally {
       if (rawContactsCursor != null) rawContactsCursor.close();
     }
   }
 
-  private Contact getStoredContact(long rawContactId) {
+  private LocalContact getContact(long rawContactId) {
     Uri rawContactUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI, rawContactId);
     Uri entityUri = Uri.withAppendedPath(rawContactUri, RawContacts.Entity.CONTENT_DIRECTORY);
     Cursor cursor = null;
+
     try {
       cursor = resolver.query(entityUri,
         new String[] { RawContacts.SOURCE_ID, RawContacts.Entity.DATA_ID, RawContacts.Entity.MIMETYPE, StructuredName.DATA1, StructuredName.DATA2 },
         null, null, null);
 
-      Contact contact = new Contact();
+      LocalContact contact = new LocalContact();
       contact.rawContactId = rawContactId;
+
       while (cursor.moveToNext()) {
         contact.sourceId = cursor.getString(0);
         if (!cursor.isNull(1)) {
@@ -61,13 +66,14 @@ public class ContactReader {
           if (CommonDataKinds.Phone.CONTENT_ITEM_TYPE.equals(mimeType) && CommonDataKinds.Phone.TYPE_WORK == subType) contact.fixedPhoneNumber = cursor.getString(3);
         }
       }
+
       return contact;
     } finally {
       if (cursor != null) cursor.close();
     }
   }
 
-  public static class Contact {
+  public static class LocalContact {
     public long rawContactId;
     public String sourceId;
     public String displayName;
