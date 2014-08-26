@@ -61,7 +61,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     for (ApiClient.UserInfoResponse c : contacts) {
       if (Settings.isSyncEnabled(getContext(), c.countryCode)) list.add(c);
-      if (list.size() > 20) break;
+      
+      // enable row below to limit the accounts to sync (for development)
+      //if (list.size() > 20) break;
     }
 
     return list;
