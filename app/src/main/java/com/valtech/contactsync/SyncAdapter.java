@@ -39,14 +39,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
       List<ApiClient.UserInfoResponse> remoteContacts = apiClient.getUserInfoResources(accessToken);
       Log.i(TAG, String.format("Got %d remote contacts.", remoteContacts.size()));
 
-      // Temporary when developing
-      List<ApiClient.UserInfoResponse> seEmployees = new ArrayList<>();
-      for (ApiClient.UserInfoResponse employee : remoteContacts) {
-        if ("se".equals(employee.countryCode)) seEmployees.add(employee);
-        if (seEmployees.size() >= 8) break;
-      }
+      List<ApiClient.UserInfoResponse> filteredRemoteContacts = filter(remoteContacts);
 
-      contactRepository.syncContacts(account, seEmployees, syncResult);
+      contactRepository.syncContacts(account, filteredRemoteContacts, syncResult);
 
       Log.i(TAG, "Sync complete: " + syncResult.stats + ".");
     } catch (NoAccessTokenException e) {
@@ -59,6 +54,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
       Log.e(TAG, "Unknown error during sync.", e);
       syncResult.databaseError = true;
     }
+  }
+
+  private List<ApiClient.UserInfoResponse> filter(List<ApiClient.UserInfoResponse> contacts) {
+    List<ApiClient.UserInfoResponse> list = new ArrayList<>();
+
+    for (ApiClient.UserInfoResponse c : contacts) {
+      if (Settings.isSyncEnabled(getContext(), c.countryCode)) list.add(c);
+      if (list.size() > 20) break;
+    }
+
+    return list;
   }
 
   public static class NoAccessTokenException extends RuntimeException {
