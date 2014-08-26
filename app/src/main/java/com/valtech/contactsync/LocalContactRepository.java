@@ -28,23 +28,23 @@ public class LocalContactRepository {
     this.localContactReader = new LocalContactReader(resolver);
   }
 
-  public void syncContacts(Account account, List<ApiClient.UserInfoResponse> employees, SyncResult syncResult) {
+  public void syncContacts(Account account, List<ApiClient.UserInfoResponse> remoteContacts, SyncResult syncResult) {
     long groupId = ensureGroup(account);
     Map<String, LocalContactReader.LocalContact> storedContacts = localContactReader.getContacts(account);
 
     Set<String> activeEmails = new HashSet<>();
-    for (ApiClient.UserInfoResponse employee : employees) {
-      LocalContactReader.LocalContact localContact = storedContacts.get(employee.email);
+    for (ApiClient.UserInfoResponse remoteContact : remoteContacts) {
+      LocalContactReader.LocalContact localContact = storedContacts.get(remoteContact.email);
       if (localContact != null) {
-        updateExistingContact(localContact, employee);
+        updateExistingContact(localContact, remoteContact);
         syncResult.stats.numUpdates++;
       } else {
-        insertNewContact(account, groupId, employee);
+        insertNewContact(account, groupId, remoteContact);
         syncResult.stats.numInserts++;
       }
       syncResult.stats.numEntries++;
 
-      activeEmails.add(employee.email);
+      activeEmails.add(remoteContact.email);
     }
 
     for (LocalContactReader.LocalContact localContact : storedContacts.values()) {
