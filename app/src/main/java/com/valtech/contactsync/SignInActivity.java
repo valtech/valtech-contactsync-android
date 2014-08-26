@@ -3,10 +3,12 @@ package com.valtech.contactsync;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
+import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Window;
 import android.webkit.CookieManager;
@@ -17,7 +19,6 @@ import java.util.HashMap;
 
 public class SignInActivity extends AccountAuthenticatorActivity {
   private static final String TAG = SignInActivity.class.getSimpleName();
-  private static final int SYNC_INTERVAL = 4 * 3600 * 1000;
 
   private ApiClient apiClient = new ApiClient();
 
@@ -72,17 +73,23 @@ public class SignInActivity extends AccountAuthenticatorActivity {
 
       AccountManager accountManager = AccountManager.get(SignInActivity.this);
       Account account = new Account(userInfoResponse.email, getString(R.string.account_type));
-      accountManager.addAccountExplicitly(account, tokenResponse.refreshToken, null);
+      boolean added = accountManager.addAccountExplicitly(account, tokenResponse.refreshToken, null);
 
-//      ContentResolver.setIsSyncable(account, ContactsContract.AUTHORITY, 1);
-//      ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
+      if (!added) {
+        accountManager.setPassword(account, tokenResponse.refreshToken);
 
-      //ContentResolver.addPeriodicSync(account, getString(R.string.account_authority), null, SYNC_INTERVAL);
-//
-//      Bundle settings = new Bundle();
-//      settings.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-//      settings.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-//      ContentResolver.requestSync(account, getString(R.string.account_authority), settings);
+        // need to test getting an access token from the new refresh token to clear the
+        // "sign in error" notification
+        try {
+          String accessToken = accountManager.blockingGetAuthToken(account, "access_token", true);
+          accountManager.invalidateAuthToken(account.type, accessToken);
+        } catch (Exception e) {
+          Log.e(TAG, "Could not get access token from new refresh token.", e);
+        }
+      }
+
+      ContentResolver.setIsSyncable(account, ContactsContract.AUTHORITY, 1);
+      ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
 
       Bundle result = new Bundle();
       result.putString(AccountManager.KEY_ACCOUNT_NAME, userInfoResponse.email);
