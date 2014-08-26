@@ -20,13 +20,15 @@ import java.util.HashMap;
 public class SignInActivity extends AccountAuthenticatorActivity {
   private static final String TAG = SignInActivity.class.getSimpleName();
 
-  private ApiClient apiClient = new ApiClient();
+  private ApiClient apiClient;
+  private WebView webView;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    apiClient = new ApiClient();
+    webView = new WebView(this);
 
-    WebView webView = new WebView(this);
     WebViewClient client = new IdpWebViewClient();
     webView.getSettings().setJavaScriptEnabled(true);
     webView.getSettings().setSaveFormData(false);
@@ -35,9 +37,25 @@ public class SignInActivity extends AccountAuthenticatorActivity {
     requestWindowFeature(Window.FEATURE_NO_TITLE);
     setContentView(webView);
 
-    webView.loadUrl(apiClient.getAuthorizeUrl(), new HashMap<String, String>() {{
-      put("X-Idp-Client-Type", "native");
-    }});
+    if (savedInstanceState == null) {
+      // the activity was not restarted due to orientation change or similar,
+      // perform authorize from the beginning
+      webView.loadUrl(apiClient.getAuthorizeUrl(), new HashMap<String, String>() {{
+        put("X-Idp-Client-Type", "native");
+      }});
+    }
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    webView.saveState(outState);
+  }
+
+  @Override
+  protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    super.onRestoreInstanceState(savedInstanceState);
+    webView.restoreState(savedInstanceState);
   }
 
   private class IdpWebViewClient extends WebViewClient {
