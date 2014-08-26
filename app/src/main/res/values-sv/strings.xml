@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Valtech Kontaktsynk</string>
+    <string name="account_label">Valtech</string>
+    <string name="denmark">Danmark</string>
+    <string name="germany">Tyskland</string>
+    <string name="france">Frankrike</string>
+    <string name="sweden">Sverige</string>
+    <string name="united_kingdom">Storbrittanien</string>
+    <string name="united_states">USA</string>
+    <string name="account_preferences_title">Länder att synka</string>
+    <string name="account_preferences_summary">Från vilka länder kontakter ska hämtas</string>
+    <string name="group_prefix">Valtech</string>
+</resources>
