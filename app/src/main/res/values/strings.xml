@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Valtech Contact Sync</string>
+    <string name="account_label">Valtech</string>
     <string name="account_type">com.valtech.contactsync.account</string>
 </resources>
