@@ -77,6 +77,8 @@ public class SignInActivity extends AccountAuthenticatorActivity {
 
       if (added) {
         Log.i(TAG, "Added account " + userInfoResponse.email + ".");
+        Settings.setSyncEnabled(SignInActivity.this, userInfoResponse.countryCode, true);
+        Log.i(TAG, "Enabled sync for " + userInfoResponse.countryCode + ".");
       } else {
         Log.i(TAG, "Updated refresh token for account " + userInfoResponse.email + ".");
         accountManager.setPassword(account, tokenResponse.refreshToken);
