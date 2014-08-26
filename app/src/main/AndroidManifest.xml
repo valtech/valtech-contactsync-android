@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.valtech.contactsync">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -17,35 +16,40 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
 
-        <activity android:name="com.valtech.contactsync.SignInActivity" android:label="@string/app_name">
+        <activity
+            android:name="com.valtech.contactsync.SignInActivity"
+            android:label="@string/app_name">
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
+                <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
 
-        <activity android:name="com.valtech.contactsync.SettingsActivity" android:label="@string/account_preferences_title">
+        <activity
+            android:name="com.valtech.contactsync.SettingsActivity"
+            android:label="@string/account_preferences_title">
             <intent-filter>
-                <action android:name="com.valtech.contactsync.VIEW_SETTINGS"/>
+                <action android:name="com.valtech.contactsync.VIEW_SETTINGS" />
             </intent-filter>
         </activity>
 
-        <service
-            android:name="com.valtech.contactsync.AuthenticatorService">
+        <service android:name="com.valtech.contactsync.AuthenticatorService">
             <intent-filter>
-                <action android:name="android.accounts.AccountAuthenticator"/>
+                <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
             <meta-data
                 android:name="android.accounts.AccountAuthenticator"
-                android:resource="@xml/authenticator"/>
+                android:resource="@xml/authenticator" />
         </service>
 
         <service
             android:name="com.valtech.contactsync.SyncAdapterService"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.content.SyncAdapter"/>
+                <action android:name="android.content.SyncAdapter" />
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/syncadapter"/>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter" />
         </service>
     </application>
 
