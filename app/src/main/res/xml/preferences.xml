@@ -4,25 +4,25 @@
     <CheckBoxPreference
         android:id="@+id/sync_dk"
         android:key="sync_dk"
-        android:title="Denmark" />
+        android:title="@string/denmark" />
     <CheckBoxPreference
         android:id="@+id/sync_de"
         android:key="sync_de"
-        android:title="Germany" />
+        android:title="@string/germany" />
     <CheckBoxPreference
         android:id="@+id/sync_fr"
         android:key="sync_fr"
-        android:title="France" />
+        android:title="@string/france" />
     <CheckBoxPreference
         android:id="@+id/sync_se"
         android:key="sync_se"
-        android:title="Sweden" />
+        android:title="@string/sweden" />
     <CheckBoxPreference
         android:id="@+id/sync_uk"
         android:key="sync_uk"
-        android:title="United Kingdom" />
+        android:title="@string/united_kingdom" />
     <CheckBoxPreference
         android:id="@+id/sync_us"
         android:key="sync_us"
-        android:title="United States" />
+        android:title="@string/united_states" />
 </PreferenceScreen>

@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.valtech.contactsync.SettingsActivity" android:label="Countries to sync">
+        <activity android:name="com.valtech.contactsync.SettingsActivity" android:label="@string/account_preferences_title">
             <intent-filter>
                 <action android:name="com.valtech.contactsync.VIEW_SETTINGS"/>
             </intent-filter>

@@ -3,4 +3,13 @@
     <string name="app_name">Valtech Contact Sync</string>
     <string name="account_label">Valtech</string>
     <string name="account_type">com.valtech.contactsync.account</string>
+    <string name="denmark">Denmark</string>
+    <string name="germany">Germany</string>
+    <string name="france">France</string>
+    <string name="sweden">Sweden</string>
+    <string name="united_kingdom">United Kingdom</string>
+    <string name="united_states">United States</string>
+    <string name="account_preferences_title">Countries to sync</string>
+    <string name="account_preferences_summary">From which countries should contacts be fetched</string>
+    <string name="group_prefix">Valtech</string>
 </resources>

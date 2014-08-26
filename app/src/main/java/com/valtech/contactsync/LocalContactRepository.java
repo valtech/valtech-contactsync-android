@@ -22,9 +22,11 @@ public class LocalContactRepository {
 
   private final ContentResolver resolver;
   private final LocalContactReader localContactReader;
+  private final String groupPrefix;
 
   public LocalContactRepository(Context context) {
     this.resolver = context.getContentResolver();
+    this.groupPrefix = context.getString(R.string.group_prefix);
     this.localContactReader = new LocalContactReader(resolver);
   }
 
@@ -38,7 +40,7 @@ public class LocalContactRepository {
         updateExistingContact(localContact, remoteContact);
         syncResult.stats.numUpdates++;
       } else {
-        long groupId = ensureGroup(account, "Valtech " + remoteContact.countryCode.toUpperCase());
+        long groupId = ensureGroup(account, groupPrefix + " " + remoteContact.countryCode.toUpperCase());
         insertNewContact(account, groupId, remoteContact);
         syncResult.stats.numInserts++;
       }
@@ -56,7 +58,7 @@ public class LocalContactRepository {
   }
 
   private void updateExistingContact(LocalContactReader.LocalContact localContact, ApiClient.UserInfoResponse employee) {
-    Log.i(TAG, "Updating existing contact " + employee.email);
+    Log.i(TAG, "Updating existing contact " + employee.email + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
@@ -101,7 +103,7 @@ public class LocalContactRepository {
   }
 
   private void insertNewContact(Account account, long groupId, ApiClient.UserInfoResponse employee) {
-    Log.i(TAG, "Inserting new contact " + employee.email);
+    Log.i(TAG, "Inserting new contact " + employee.email + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
     final int backReferenceIndex = 0;
@@ -158,7 +160,7 @@ public class LocalContactRepository {
   }
 
   private void deleteInactiveContact(LocalContactReader.LocalContact localContact) {
-    Log.i(TAG, "Deleting contact " + localContact.sourceId);
+    Log.i(TAG, "Deleting contact " + localContact.sourceId + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
     ops.add(ContentProviderOperation.newDelete(
