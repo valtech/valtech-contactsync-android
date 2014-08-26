@@ -69,13 +69,16 @@ public class SignInActivity extends AccountAuthenticatorActivity {
       ApiClient.TokenResponse tokenResponse = apiClient.getAccessTokenAndRefreshToken(params[0]);
       ApiClient.UserInfoResponse userInfoResponse = apiClient.getUserInfoMeResource(tokenResponse.accessToken);
 
-      Log.i(TAG, "Signing in as user " + userInfoResponse.email + " in country " + userInfoResponse.countryCode);
+      Log.i(TAG, "Signing in as user " + userInfoResponse.email + " in country " + userInfoResponse.countryCode + ".");
 
       AccountManager accountManager = AccountManager.get(SignInActivity.this);
       Account account = new Account(userInfoResponse.email, getString(R.string.account_type));
       boolean added = accountManager.addAccountExplicitly(account, tokenResponse.refreshToken, null);
 
-      if (!added) {
+      if (added) {
+        Log.i(TAG, "Added account " + userInfoResponse.email + ".");
+      } else {
+        Log.i(TAG, "Updated refresh token for account " + userInfoResponse.email + ".");
         accountManager.setPassword(account, tokenResponse.refreshToken);
 
         // need to test getting an access token from the new refresh token to clear the
