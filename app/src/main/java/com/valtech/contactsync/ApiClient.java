@@ -70,7 +70,7 @@ public class ApiClient {
       if (statusCode >= 400 && statusCode < 500) {
         String json = EntityUtils.toString(response.getEntity());
         TokenErrorResponse tokenErrorResponse = GSON.fromJson(json, TokenErrorResponse.class);
-        throw new OAuthException(tokenErrorResponse);
+        throw OAuthException.build(tokenErrorResponse);
       } else if (statusCode >= 500) {
         throw new RuntimeException("Internal server error occurred.");
       }
@@ -147,12 +147,23 @@ public class ApiClient {
   }
 
   public static class OAuthException extends RuntimeException {
-    public OAuthException(TokenErrorResponse tokenErrorResponse) {
-      super("OAuth error occurred on token request ('" + tokenErrorResponse.error + "', '" + tokenErrorResponse.error_description + "').");
+    protected OAuthException(TokenErrorResponse response) {
+      super("OAuth error occurred on token request ('" + response.error + "', '" + response.error_description + "').");
     }
 
-    public OAuthException(Header wwwAuthenticateHeader) {
+    protected OAuthException(Header wwwAuthenticateHeader) {
       super("OAuth error occurred when accessing protected resource (" + wwwAuthenticateHeader.getValue() + ")");
+    }
+
+    public static OAuthException build(TokenErrorResponse response) {
+      if ("invalid_grant".equals(response.error)) return new InvalidGrantException(response);
+      return new OAuthException(response);
+    }
+  }
+
+  public static class InvalidGrantException extends OAuthException {
+    protected InvalidGrantException(TokenErrorResponse response) {
+      super(response);
     }
   }
 }
