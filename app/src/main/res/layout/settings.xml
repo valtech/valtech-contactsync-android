@@ -5,15 +5,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/example"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:text="YEAAAAHOOOOO!" />
-
-    <!--<fragment
+    <fragment
         android:id="@+id/settings_fragment"
-        android:name="com.homeki.android.SettingsFragment"
+        android:name="com.valtech.contactsync.SettingsFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />-->
+        android:layout_height="match_parent" />
 </LinearLayout>
