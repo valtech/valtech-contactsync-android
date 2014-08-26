@@ -29,7 +29,6 @@ public class LocalContactRepository {
   }
 
   public void syncContacts(Account account, List<ApiClient.UserInfoResponse> remoteContacts, SyncResult syncResult) {
-    long groupId = ensureGroup(account);
     Map<String, LocalContactReader.LocalContact> storedContacts = localContactReader.getContacts(account);
 
     Set<String> activeEmails = new HashSet<>();
@@ -39,6 +38,7 @@ public class LocalContactRepository {
         updateExistingContact(localContact, remoteContact);
         syncResult.stats.numUpdates++;
       } else {
+        long groupId = ensureGroup(account, "Valtech " + remoteContact.countryCode.toUpperCase());
         insertNewContact(account, groupId, remoteContact);
         syncResult.stats.numInserts++;
       }
@@ -158,7 +158,7 @@ public class LocalContactRepository {
   }
 
   private void deleteInactiveContact(LocalContactReader.LocalContact localContact) {
-    Log.i(TAG, "Deleting inactive contact " + localContact.sourceId);
+    Log.i(TAG, "Deleting contact " + localContact.sourceId);
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
     ops.add(ContentProviderOperation.newDelete(
@@ -178,19 +178,23 @@ public class LocalContactRepository {
     }
   }
 
-  private long ensureGroup(Account account) {
+  private long ensureGroup(Account account, String groupTitle) {
     try {
-      return getGroupId(account);
+      return getGroupId(account, groupTitle);
     } catch (NoSuchElementException e) {
-      createGroup(account);
-      return getGroupId(account);
+      createGroup(account, groupTitle);
+      return getGroupId(account, groupTitle);
     }
   }
 
-  private long getGroupId(Account account) {
+  private long getGroupId(Account account, String groupTitle) {
     Cursor cursor = null;
     try {
-      cursor = resolver.query(ContactsContract.Groups.CONTENT_URI, new String[] { ContactsContract.Groups._ID }, ContactsContract.Groups.ACCOUNT_TYPE + " = ?", new String[] { account.type }, null);
+      cursor = resolver.query(ContactsContract.Groups.CONTENT_URI,
+        new String[] { ContactsContract.Groups._ID },
+        ContactsContract.Groups.ACCOUNT_TYPE + " = ? AND " + ContactsContract.Groups.TITLE + " = ?",
+        new String[] { account.type, groupTitle },
+        null);
       if (cursor.moveToNext()) return cursor.getLong(0);
     } finally {
       if (cursor != null) cursor.close();
@@ -198,9 +202,9 @@ public class LocalContactRepository {
     throw new NoSuchElementException();
   }
 
-  private void createGroup(Account account) {
+  private void createGroup(Account account, String groupTitle) {
     ContentValues values = new ContentValues();
-    values.put(ContactsContract.Groups.TITLE, "Valtech ID");
+    values.put(ContactsContract.Groups.TITLE, groupTitle);
     values.put(ContactsContract.Groups.GROUP_VISIBLE, 1);
     values.put(ContactsContract.Groups.SHOULD_SYNC, 0);
 
