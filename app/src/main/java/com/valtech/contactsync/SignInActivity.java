@@ -3,7 +3,9 @@ package com.valtech.contactsync;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -84,46 +86,68 @@ public class SignInActivity extends AccountAuthenticatorActivity {
   private class SignInTask extends AsyncTask<String, Void, Bundle> {
     @Override
     protected Bundle doInBackground(String... params) {
-      ApiClient.TokenResponse tokenResponse = apiClient.getAccessTokenAndRefreshToken(params[0]);
-      ApiClient.UserInfoResponse userInfoResponse = apiClient.getUserInfoMeResource(tokenResponse.accessToken);
+      try {
+        ApiClient.TokenResponse tokenResponse = apiClient.getAccessTokenAndRefreshToken(params[0]);
+        ApiClient.UserInfoResponse userInfoResponse = apiClient.getUserInfoMeResource(tokenResponse.accessToken);
 
-      Log.i(TAG, "Signing in as user " + userInfoResponse.email + " in country " + userInfoResponse.countryCode + ".");
+        Log.i(TAG, "Signing in as user " + userInfoResponse.email + " in country " + userInfoResponse.countryCode + ".");
 
-      AccountManager accountManager = AccountManager.get(SignInActivity.this);
-      Account account = new Account(userInfoResponse.email, getString(R.string.account_type));
-      boolean added = accountManager.addAccountExplicitly(account, tokenResponse.refreshToken, null);
+        AccountManager accountManager = AccountManager.get(SignInActivity.this);
+        Account account = new Account(userInfoResponse.email, getString(R.string.account_type));
+        boolean added = accountManager.addAccountExplicitly(account, tokenResponse.refreshToken, null);
 
-      if (added) {
-        Log.i(TAG, "Added account " + userInfoResponse.email + ".");
-        Settings.setSyncEnabled(SignInActivity.this, userInfoResponse.countryCode, true);
-        Log.i(TAG, "Enabled sync for " + userInfoResponse.countryCode + ".");
-      } else {
-        Log.i(TAG, "Updated refresh token for account " + userInfoResponse.email + ".");
-        accountManager.setPassword(account, tokenResponse.refreshToken);
+        if (added) {
+          Log.i(TAG, "Added account " + userInfoResponse.email + ".");
+          Settings.setSyncEnabled(SignInActivity.this, userInfoResponse.countryCode, true);
+          Log.i(TAG, "Enabled sync for " + userInfoResponse.countryCode + ".");
+        } else {
+          Log.i(TAG, "Updated refresh token for account " + userInfoResponse.email + ".");
+          accountManager.setPassword(account, tokenResponse.refreshToken);
 
-        // need to test getting an access token from the new refresh token to clear the
-        // "sign in error" notification
-        try {
-          String accessToken = accountManager.blockingGetAuthToken(account, "access_token", true);
-          accountManager.invalidateAuthToken(account.type, accessToken);
-        } catch (Exception e) {
-          Log.e(TAG, "Could not get access token from new refresh token.", e);
+          // need to test getting an access token from the new refresh token to clear the
+          // "sign in error" notification
+          try {
+            String accessToken = accountManager.blockingGetAuthToken(account, "access_token", true);
+            accountManager.invalidateAuthToken(account.type, accessToken);
+          } catch (Exception e) {
+            Log.e(TAG, "Could not get access token from new refresh token.", e);
+          }
         }
+
+        ContentResolver.setIsSyncable(account, ContactsContract.AUTHORITY, 1);
+        ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
+
+        Bundle result = new Bundle();
+        result.putString(AccountManager.KEY_ACCOUNT_NAME, userInfoResponse.email);
+        result.putString(AccountManager.KEY_ACCOUNT_TYPE, getString(R.string.account_type));
+        return result;
+      } catch (ApiClient.OAuthException e) {
+        Log.e(TAG, "OAuth exception during sign-in", e);
+        Bundle result = new Bundle();
+        result.putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_INVALID_RESPONSE);
+        return result;
       }
-
-      ContentResolver.setIsSyncable(account, ContactsContract.AUTHORITY, 1);
-      ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
-
-      Bundle result = new Bundle();
-      result.putString(AccountManager.KEY_ACCOUNT_NAME, userInfoResponse.email);
-      result.putString(AccountManager.KEY_ACCOUNT_TYPE, getString(R.string.account_type));
-      return result;
     }
 
     @Override
-    protected void onPostExecute(Bundle result) {
-      SignInActivity.this.setAccountAuthenticatorResult(result);
-      SignInActivity.this.finish();
+    protected void onPostExecute(final Bundle result) {
+      if (result.containsKey(AccountManager.KEY_ERROR_CODE)) {
+        new AlertDialog.Builder(SignInActivity.this)
+          .setIcon(android.R.drawable.ic_dialog_alert)
+          .setTitle(R.string.error)
+          .setMessage(R.string.auth_error_message)
+          .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+              SignInActivity.this.setAccountAuthenticatorResult(result);
+              SignInActivity.this.finish();
+            }
+          })
+          .show();
+      } else {
+        SignInActivity.this.setAccountAuthenticatorResult(result);
+        SignInActivity.this.finish();
+      }
     }
   }
 }
