@@ -6,7 +6,7 @@
     <string name="germany">Tyskland</string>
     <string name="france">Frankrike</string>
     <string name="sweden">Sverige</string>
-    <string name="united_kingdom">Storbrittanien</string>
+    <string name="united_kingdom">Storbritannien</string>
     <string name="united_states">USA</string>
     <string name="account_preferences_title">Länder att synka</string>
     <string name="account_preferences_summary">Från vilka länder kontakter ska hämtas</string>
