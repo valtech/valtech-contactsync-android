@@ -10,9 +10,9 @@ It also serves as a public, free and open source (MIT) example of how to write a
 
 1. Download the [Android SDK](http://developer.android.com/sdk/index.html)
 2. Install IntelliJ IDEA
-3. Create the file `<repo-root>/local.properties` with the contents `sdk.dir=/path/to/android/sdk` 
+3. Create the file `<repo-root>/local.properties` with the contents `sdk.dir=/path/to/android/sdk`
 4. Import the project in IntelliJ
-	1. Open IntelliJ
+  1. Open IntelliJ
   2. Import project
   3. Select the valtech-contactsync-android folder
   4. Import project from external Model: Gradle
@@ -25,3 +25,4 @@ It also serves as a public, free and open source (MIT) example of how to write a
 	4. Click OK
 	5. Go to Project in Project Structure
 	6. Choose Android as the Project SDK
+6. Do `cp idp.xml.template app/src/main/res/values/idp.xml` and fill in the client secret

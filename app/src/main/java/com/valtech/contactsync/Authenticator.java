@@ -15,7 +15,7 @@ public class Authenticator extends AbstractAccountAuthenticator {
   public Authenticator(Context context) {
     super(context);
     this.context = context;
-    this.apiClient = new ApiClient();
+    this.apiClient = new ApiClient(context);
   }
 
   @Override

@@ -20,7 +20,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
   public SyncAdapter(Context context) {
     super(context, true);
-    this.apiClient = new ApiClient();
+    this.apiClient = new ApiClient(context);
     this.contactRepository = new LocalContactRepository(context);
   }
 

@@ -1,5 +1,6 @@
 package com.valtech.contactsync;
 
+import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
@@ -23,18 +24,28 @@ import java.util.List;
 public class ApiClient {
   private static final Gson GSON = new Gson();
 
-  private static final String AUTHORIZE_URL = "https://stage-id.valtech.com/oauth2/authorize";
-  private static final String TOKEN_URL = "https://stage-id.valtech.com/oauth2/token";
-  private static final String USER_INFO_URL = "https://stage-id.valtech.com/api/users/me";
-  private static final String ALL_USER_INFOS_URL = "https://stage-id.valtech.com/api/users";
-  private static final String CLIENT_ID = "valtech.contactsync.android";
-  private static final String CLIENT_SECRET = "MGIxZmIwMDYtZTVlOS00ZDdiLTgxYjMtMjg2MzdhMTQwNGVh";
-  private static final String INITIAL_SCOPE = "email vidp:get_users vidp:offline";
-  private static final String FOLLOW_UP_SCOPE = "vidp:get_users";
+  private final String authorizeUrl;
+  private final String tokenUrl;
+  private final String userInfoUrl;
+  private final String allUserInfosUrl;
+  private final String clientId;
+  private final String clientSecret;
+  private final String initialScope;
+  private final String followUpScope;
 
+  public ApiClient(Context context) {
+    authorizeUrl = context.getString(R.string.idp_authorize_url);
+    tokenUrl = context.getString(R.string.idp_token_url);
+    userInfoUrl = context.getString(R.string.idp_user_info_url);
+    allUserInfosUrl = context.getString(R.string.idp_all_user_infos_url);
+    clientId = context.getString(R.string.idp_client_id);
+    clientSecret = context.getString(R.string.idp_client_secret);
+    initialScope = context.getString(R.string.idp_initial_scope);
+    followUpScope = context.getString(R.string.idp_follow_up_scope);
+  }
 
   public String getAuthorizeUrl() {
-    return AUTHORIZE_URL + "?response_type=code&client_id=" + CLIENT_ID + "&scope=" + INITIAL_SCOPE.replace(" ", "%20");
+    return authorizeUrl + "?response_type=code&client_id=" + clientId + "&scope=" + initialScope.replace(" ", "%20");
   }
 
   public TokenResponse getAccessTokenAndRefreshToken(String code) {
@@ -48,18 +59,18 @@ public class ApiClient {
     TokenResponse tokenResponse = tokenRequest(
       new BasicNameValuePair("grant_type", "refresh_token"),
       new BasicNameValuePair("refresh_token", refreshToken),
-      new BasicNameValuePair("scope", FOLLOW_UP_SCOPE));
+      new BasicNameValuePair("scope", followUpScope));
     return tokenResponse.accessToken;
   }
 
   private TokenResponse tokenRequest(NameValuePair... fields) {
     HttpClient httpClient = new DefaultHttpClient();
-    HttpPost httpPost = new HttpPost(TOKEN_URL);
+    HttpPost httpPost = new HttpPost(tokenUrl);
 
     try {
       List<NameValuePair> nameValuePairs = new ArrayList<>();
-      nameValuePairs.add(new BasicNameValuePair("client_id", CLIENT_ID));
-      nameValuePairs.add(new BasicNameValuePair("client_secret", CLIENT_SECRET));
+      nameValuePairs.add(new BasicNameValuePair("client_id", clientId));
+      nameValuePairs.add(new BasicNameValuePair("client_secret", clientSecret));
       nameValuePairs.addAll(Arrays.asList(fields));
 
       httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
@@ -85,11 +96,11 @@ public class ApiClient {
   }
 
   public UserInfoResponse getUserInfoMeResource(String accessToken) {
-    return getProtectedResource(USER_INFO_URL, accessToken, UserInfoResponse.class);
+    return getProtectedResource(userInfoUrl, accessToken, UserInfoResponse.class);
   }
 
   public List<UserInfoResponse> getUserInfoResources(String accessToken) {
-    return getProtectedResource(ALL_USER_INFOS_URL, accessToken, new TypeToken<List<UserInfoResponse>>(){}.getType());
+    return getProtectedResource(allUserInfosUrl, accessToken, new TypeToken<List<UserInfoResponse>>(){}.getType());
   }
 
   private <T> T getProtectedResource(String url, String accessToken, Type type) {

@@ -26,7 +26,7 @@ public class SignInActivity extends AccountAuthenticatorActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    apiClient = new ApiClient();
+    apiClient = new ApiClient(this);
     webView = new WebView(this);
 
     WebViewClient client = new IdpWebViewClient();
