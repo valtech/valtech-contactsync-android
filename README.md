@@ -6,6 +6,20 @@ It is connected to Valtech's identity provider (Valtech IDP).
 This app also serves to demonstrate how easy it is to integrate with Valtech IDP and its OAuth 2 interface.
 It also serves as a public, free and open source (MIT) example of how to write a Contact Provider for Android.
 
+
+## How to use
+
+1. Download and install the app from Google Play (soon).
+2. Open Android Settings -> Accounts.
+3. Click "Add account" and choose "Valtech".
+4. Sign in to IDP using your email and password.
+5. Done! Contacts for your Valtech country will now be synced to your phone.
+6. Configure:
+  1. Go to Android Settings -> Accounts -> Valtech.
+  2. Click "Countries to sync".
+  3. Select which countries to sync contacts from.
+
+
 ## Local development
 
 1. Download the [Android SDK](http://developer.android.com/sdk/index.html).
