@@ -6,3 +6,4 @@ local.properties
 build
 
 app/src/main/res/values/idp.xml
+valtech.keystore
