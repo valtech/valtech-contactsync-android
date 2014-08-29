@@ -17,7 +17,7 @@ It also serves as a public, free and open source (MIT) example of how to write a
 6. Configure:
   1. Go to Android Settings -> Accounts -> Valtech.
   2. Click "Countries to sync".
-  3. Select which countries to sync contacts from.
+  3. Select which countries to sync contacts from. Your own country will be preselected.
 
 If you unselect a previously selected country to sync from, contacts synced from that country will be removed.
 If you uninstall the app all contacts synced will be removed.
