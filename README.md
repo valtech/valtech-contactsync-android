@@ -9,7 +9,7 @@ It also serves as a public, free and open source (MIT) example of how to write a
 
 ## How to use
 
-1. Download and install the app from Google Play (soon).
+1. Download and install the app from [Google Play](https://play.google.com/store/apps/details?id=com.valtech.contactsync).
 2. Open **Android Settings** -> **Accounts**.
 3. Click **Add account** and choose **Valtech**.
 4. Sign in to IDP using your email and password.
