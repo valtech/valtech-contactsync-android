@@ -9,19 +9,23 @@ It also serves as a public, free and open source (MIT) example of how to write a
 
 ## How to use
 
+Follow these simple steps to setup sync:
+
 1. Download and install the app from [Google Play](https://play.google.com/store/apps/details?id=com.valtech.contactsync).
 2. Open **Android Settings** -> **Accounts**.
 3. Click **Add account** and choose **Valtech**.
 4. Sign in to IDP using your email and password.
-5. Done! Contacts for your Valtech country will now be synced to your phone.
-6. Configure:
-  1. Go to **Android Settings** -> **Accounts** -> **Valtech**.
-  2. Click **Countries to sync**.
-  3. Select which countries to sync contacts from (your own country will be preselected).
+5. Done! Contacts for your Valtech country will now be synced to your phone on a daily basis.
 
-If you unselect a previously selected country to sync from, contacts synced from that country will be removed. If you uninstall the app all contacts synced will be removed.
+If you like to sync contacts from more countries than your own country, follow these steps:
 
-The app will sync contacts automatically once per day (when internet is available). You can revoke access for the app at any time at https://id.valtech.com/.
+1. Go to **Android Settings** -> **Accounts** -> **Valtech**.
+2. Touch **Countries to sync**.
+3. Select which countries to sync contacts from (your own country will be preselected).
+
+If you unselect a previously selected country, contacts synced from that country will be removed. If you uninstall the app all contacts synced will be removed.
+
+You can revoke access for the app at any time at https://id.valtech.com/.
 
 
 ## Local development
@@ -37,12 +41,12 @@ The app will sync contacts automatically once per day (when internet is availabl
   5. Select "User gradle default wrapper (recommended)".
   6. Finish.
 5. Add the Android SDK.
-	1. File -> Project structure -> SDKs.
-	2. Click +, choose Android SDK.
-	3. Select path to the Android SDK.
-	4. Click OK.
-	5. Go to Project in Project Structure.
-	6. Choose Android as the Project SDK.
+  1. File -> Project structure -> SDKs.
+  2. Click +, choose Android SDK.
+  3. Select path to the Android SDK.
+  4. Click OK.
+  5. Go to Project in Project Structure.
+  6. Choose Android as the Project SDK.
 6. Do `cp idp.xml.template app/src/main/res/values/idp.xml` and fill in the client secret.
 
 
