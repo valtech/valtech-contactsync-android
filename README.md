@@ -25,6 +25,7 @@ If you uninstall the app all contacts synced will be removed.
 The app will sync contacts automatically once per day (when internet is available).
 You can revoke access at any time at https://id.valtech.com/.
 
+
 ## Local development
 
 1. Download the [Android SDK](http://developer.android.com/sdk/index.html).
@@ -45,6 +46,17 @@ You can revoke access at any time at https://id.valtech.com/.
 	5. Go to Project in Project Structure.
 	6. Choose Android as the Project SDK.
 6. Do `cp idp.xml.template app/src/main/res/values/idp.xml` and fill in the client secret.
+
+
+## Release
+
+1. Get the key for signing the APK from IT (initially created using `keytool -genkey -v -keystore valtech.keystore -alias valtech -keyalg RSA -keysize 2048 -validity 10000`).
+2. Put the `valtech.keystore` at repository root.
+3. Make sure you have the correct credentials in `app/src/main/res/values/idp.xml`.
+4. Update `versionCode` and `versionName` in `app/build.gradle`.
+4. Run ` SIGNING_KEY=<putsecretkeyhere> ./gradlew assembleRelease` (add a space before `SIGNING_KEY` as that will hide the command from history if you [have `$HISTCONTROL` set](http://stackoverflow.com/questions/8473121/execute-command-without-keeping-it-in-history)).
+5. Upload `app/build/apk/app-release.apk` to [Google Play Developer Console](https://play.google.com/apps/publish/).
+
 
 ## Credits
 
