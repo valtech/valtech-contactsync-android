@@ -10,20 +10,18 @@ It also serves as a public, free and open source (MIT) example of how to write a
 ## How to use
 
 1. Download and install the app from Google Play (soon).
-2. Open Android Settings -> Accounts.
-3. Click "Add account" and choose "Valtech".
+2. Open **Android Settings** -> **Accounts**.
+3. Click **Add account** and choose **Valtech**.
 4. Sign in to IDP using your email and password.
 5. Done! Contacts for your Valtech country will now be synced to your phone.
 6. Configure:
-  1. Go to Android Settings -> Accounts -> Valtech.
-  2. Click "Countries to sync".
-  3. Select which countries to sync contacts from. Your own country will be preselected.
+  1. Go to **Android Settings** -> **Accounts** -> **Valtech**.
+  2. Click **Countries to sync**.
+  3. Select which countries to sync contacts from (your own country will be preselected).
 
-If you unselect a previously selected country to sync from, contacts synced from that country will be removed.
-If you uninstall the app all contacts synced will be removed.
+If you unselect a previously selected country to sync from, contacts synced from that country will be removed. If you uninstall the app all contacts synced will be removed.
 
-The app will sync contacts automatically once per day (when internet is available).
-You can revoke access at any time at https://id.valtech.com/.
+The app will sync contacts automatically once per day (when internet is available). You can revoke access for the app at any time at https://id.valtech.com/.
 
 
 ## Local development
