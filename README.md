@@ -1,7 +1,7 @@
 # Valtech Contact Sync Android
 
 This android app syncs contact details for Valtech employees to your phone.
-It is connected to Valtech's identity provider (Valtech IDP).
+It is connected to Valtech's identity provider (Valtech IDP), https://id.valtech.com/.
 
 This app also serves to demonstrate how easy it is to integrate with Valtech IDP and its OAuth 2 interface.
 It also serves as a public, free and open source (MIT) example of how to write a Contact Provider for Android.
@@ -19,6 +19,11 @@ It also serves as a public, free and open source (MIT) example of how to write a
   2. Click "Countries to sync".
   3. Select which countries to sync contacts from.
 
+If you unselect a previously selected country to sync from, contacts synced from that country will be removed.
+If you uninstall the app all contacts synced will be removed.
+
+The app will sync contacts automatically once per day (when internet is available).
+You can revoke access at any time at https://id.valtech.com/.
 
 ## Local development
 
