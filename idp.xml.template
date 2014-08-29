@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Internal settings, do not translate -->
-    <string name="idp_authorize_url">https://id.valtech.com/oauth2/authorize</string>
-    <string name="idp_token_url">https://id.valtech.com/oauth2/token</string>
-    <string name="idp_user_info_url">https://id.valtech.com/api/users/me</string>
-    <string name="idp_all_user_infos_url">https://id.valtech.com/api/users</string>
-    <string name="idp_client_id">valtech.contactsync.android</string>
-    <string name="idp_client_secret">GET THE SECRET FROM IDP ADMIN AND PUT HERE</string>
-    <string name="idp_initial_scope">profile email phone vidp:get_users vidp:offline</string>
-    <string name="idp_follow_up_scope">vidp:get_users</string>
+    <string translatable="false" name="idp_authorize_url">https://id.valtech.com/oauth2/authorize</string>
+    <string translatable="false" name="idp_token_url">https://id.valtech.com/oauth2/token</string>
+    <string translatable="false" name="idp_user_info_url">https://id.valtech.com/api/users/me</string>
+    <string translatable="false" name="idp_all_user_infos_url">https://id.valtech.com/api/users</string>
+    <string translatable="false" name="idp_client_id">valtech.contactsync.android</string>
+    <string translatable="false" name="idp_client_secret">GET THE SECRET FROM IDP ADMIN AND PUT HERE</string>
+    <string translatable="false" name="idp_initial_scope">profile email phone vidp:get_users vidp:offline</string>
+    <string translatable="false" name="idp_follow_up_scope">vidp:get_users</string>
 </resources>
