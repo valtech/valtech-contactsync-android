@@ -57,8 +57,8 @@ public class LocalContactRepository {
     }
   }
 
-  private void updateExistingContact(LocalContactReader.LocalContact localContact, ApiClient.UserInfoResponse employee) {
-    Log.i(TAG, "Updating existing contact " + employee.email + ".");
+  private void updateExistingContact(LocalContactReader.LocalContact localContact, ApiClient.UserInfoResponse remoteContact) {
+    Log.i(TAG, "Updating existing contact " + remoteContact.email + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
@@ -66,8 +66,8 @@ public class LocalContactRepository {
     ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-        new String[] { String.valueOf(localContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE })
-      .withValue(StructuredName.DISPLAY_NAME, employee.name)
+        new String[]{String.valueOf(localContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE})
+      .withValue(StructuredName.DISPLAY_NAME, remoteContact.name)
       .build());
 
     // Email
@@ -75,7 +75,7 @@ public class LocalContactRepository {
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
         new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE})
-      .withValue(CommonDataKinds.Email.DATA, employee.email)
+      .withValue(CommonDataKinds.Email.DATA, remoteContact.email)
       .withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK)
       .build());
 
@@ -84,15 +84,15 @@ public class LocalContactRepository {
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
         new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
-      .withValue(CommonDataKinds.Phone.NUMBER, employee.phoneNumber)
+      .withValue(CommonDataKinds.Phone.NUMBER, remoteContact.phoneNumber)
       .build());
 
     // Fixed phone
     ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
-        new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
-      .withValue(CommonDataKinds.Phone.NUMBER, employee.fixedPhoneNumber)
+        new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK)})
+      .withValue(CommonDataKinds.Phone.NUMBER, remoteContact.fixedPhoneNumber)
       .build());
 
     try {
@@ -102,8 +102,8 @@ public class LocalContactRepository {
     }
   }
 
-  private void insertNewContact(Account account, long groupId, ApiClient.UserInfoResponse employee) {
-    Log.i(TAG, "Inserting new contact " + employee.email + ".");
+  private void insertNewContact(Account account, long groupId, ApiClient.UserInfoResponse remoteContact) {
+    Log.i(TAG, "Inserting new contact " + remoteContact.email + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
     final int backReferenceIndex = 0;
@@ -111,39 +111,45 @@ public class LocalContactRepository {
     ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build())
       .withValue(RawContacts.ACCOUNT_TYPE, account.type)
       .withValue(RawContacts.ACCOUNT_NAME, account.name)
-      .withValue(RawContacts.SOURCE_ID, employee.email)
-      .build());
-
-    // Name
-    ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
-      .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
-      .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
-      .withValue(StructuredName.DISPLAY_NAME, employee.name)
+      .withValue(RawContacts.SOURCE_ID, remoteContact.email)
       .build());
 
     // Email
     ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
       .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
       .withValue(Data.MIMETYPE, CommonDataKinds.Email.CONTENT_ITEM_TYPE)
-      .withValue(CommonDataKinds.Email.DATA, employee.email)
+      .withValue(CommonDataKinds.Email.DATA, remoteContact.email)
       .withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK)
       .build());
 
+    // Name
+    if (!nullOrEmpty(remoteContact.name)) {
+      ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
+        .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+        .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
+        .withValue(StructuredName.DISPLAY_NAME, remoteContact.name)
+        .build());
+    }
+
     // Mobile phone
-    ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
-      .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
-      .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-      .withValue(CommonDataKinds.Phone.NUMBER, employee.phoneNumber)
-      .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK_MOBILE)
-      .build());
+    if (!nullOrEmpty(remoteContact.phoneNumber)) {
+      ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
+        .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+        .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+        .withValue(CommonDataKinds.Phone.NUMBER, remoteContact.phoneNumber)
+        .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK_MOBILE)
+        .build());
+    }
 
     // Fixed phone
-    ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
-      .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
-      .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-      .withValue(CommonDataKinds.Phone.NUMBER, employee.fixedPhoneNumber)
-      .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK)
-      .build());
+    if (!nullOrEmpty(remoteContact.fixedPhoneNumber)) {
+      ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
+        .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+        .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+        .withValue(CommonDataKinds.Phone.NUMBER, remoteContact.fixedPhoneNumber)
+        .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK)
+        .build());
+    }
 
     // It is nice if the contact is part of a group, and this makes the contact visible
     ops.add(ContentProviderOperation.newInsert(DATA_CONTENT_URI)
@@ -157,6 +163,10 @@ public class LocalContactRepository {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private boolean nullOrEmpty(String s) {
+    return s == null || s.isEmpty();
   }
 
   private void deleteInactiveContact(LocalContactReader.LocalContact localContact) {
