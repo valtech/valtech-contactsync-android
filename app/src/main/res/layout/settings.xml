@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/settings_fragment"
-        android:name="com.valtech.contactsync.SettingsFragment"
+        android:name="com.valtech.contactsync.setting.SettingsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </LinearLayout>

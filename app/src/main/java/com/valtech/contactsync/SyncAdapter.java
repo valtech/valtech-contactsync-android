@@ -8,6 +8,10 @@ import android.content.Context;
 import android.content.SyncResult;
 import android.os.Bundle;
 import android.util.Log;
+import com.valtech.contactsync.api.ApiClient;
+import com.valtech.contactsync.api.OAuthException;
+import com.valtech.contactsync.api.UserInfoResponse;
+import com.valtech.contactsync.setting.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +40,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
       accountManager.invalidateAuthToken(account.type, accessToken); // only use access token once
 
       Log.i(TAG, "Fetching remote contacts from resource server.");
-      List<ApiClient.UserInfoResponse> remoteContacts = apiClient.getUserInfoResources(accessToken);
+      List<UserInfoResponse> remoteContacts = apiClient.getUserInfoResources(accessToken);
       Log.i(TAG, String.format("Got %d remote contacts.", remoteContacts.size()));
 
-      List<ApiClient.UserInfoResponse> filteredRemoteContacts = filter(remoteContacts);
+      List<UserInfoResponse> filteredRemoteContacts = filter(remoteContacts);
 
       contactRepository.syncContacts(account, filteredRemoteContacts, syncResult);
 
@@ -47,7 +51,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     } catch (NoAccessTokenException e) {
       Log.i(TAG, "No access token.");
       syncResult.stats.numAuthExceptions = 1;
-    } catch (ApiClient.OAuthException e) {
+    } catch (OAuthException e) {
       Log.e(TAG, "OAuth exception during sync.", e);
       syncResult.stats.numAuthExceptions = 1;
     } catch (Exception e) {
@@ -56,10 +60,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
   }
 
-  private List<ApiClient.UserInfoResponse> filter(List<ApiClient.UserInfoResponse> contacts) {
-    List<ApiClient.UserInfoResponse> list = new ArrayList<>();
+  private List<UserInfoResponse> filter(List<UserInfoResponse> contacts) {
+    List<UserInfoResponse> list = new ArrayList<>();
 
-    for (ApiClient.UserInfoResponse c : contacts) {
+    for (UserInfoResponse c : contacts) {
       if (Settings.isSyncEnabled(getContext(), c.countryCode)) list.add(c);
       
       // enable row below to limit the accounts to sync (for development)

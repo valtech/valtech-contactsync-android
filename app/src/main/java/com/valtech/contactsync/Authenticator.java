@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import com.valtech.contactsync.api.ApiClient;
+import com.valtech.contactsync.api.InvalidGrantException;
 
 public class Authenticator extends AbstractAccountAuthenticator {
   private static final String TAG = Authenticator.class.getSimpleName();
@@ -48,7 +50,7 @@ public class Authenticator extends AbstractAccountAuthenticator {
       bundle.putString(AccountManager.KEY_AUTHTOKEN, accessToken);
 
       return bundle;
-    } catch (ApiClient.InvalidGrantException e) {
+    } catch (InvalidGrantException e) {
       Log.i(TAG, "Refresh token invalid.");
       return startSignIn(response);
     } catch (Exception e) {

@@ -16,6 +16,10 @@ import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import com.valtech.contactsync.api.ApiClient;
+import com.valtech.contactsync.api.OAuthException;
+import com.valtech.contactsync.api.UserInfoResponse;
+import com.valtech.contactsync.setting.Settings;
 
 import java.util.HashMap;
 
@@ -88,7 +92,7 @@ public class SignInActivity extends AccountAuthenticatorActivity {
     protected Bundle doInBackground(String... params) {
       try {
         ApiClient.TokenResponse tokenResponse = apiClient.getAccessTokenAndRefreshToken(params[0]);
-        ApiClient.UserInfoResponse userInfoResponse = apiClient.getUserInfoMeResource(tokenResponse.accessToken);
+        UserInfoResponse userInfoResponse = apiClient.getUserInfoMeResource(tokenResponse.accessToken);
 
         Log.i(TAG, "Signing in as user " + userInfoResponse.email + " in country " + userInfoResponse.countryCode + ".");
 
@@ -121,7 +125,7 @@ public class SignInActivity extends AccountAuthenticatorActivity {
         result.putString(AccountManager.KEY_ACCOUNT_NAME, userInfoResponse.email);
         result.putString(AccountManager.KEY_ACCOUNT_TYPE, getString(R.string.account_type));
         return result;
-      } catch (ApiClient.OAuthException e) {
+      } catch (OAuthException e) {
         Log.e(TAG, "OAuth exception during sign-in", e);
         Bundle result = new Bundle();
         result.putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_INVALID_RESPONSE);

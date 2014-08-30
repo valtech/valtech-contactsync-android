@@ -1,4 +1,4 @@
-package com.valtech.contactsync;
+package com.valtech.contactsync.setting;
 
 import android.content.Context;
 import android.content.SharedPreferences;

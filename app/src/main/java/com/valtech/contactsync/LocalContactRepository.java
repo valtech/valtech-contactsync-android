@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.util.Log;
+import com.valtech.contactsync.api.UserInfoResponse;
 
 import java.util.*;
 
@@ -30,11 +31,11 @@ public class LocalContactRepository {
     this.localContactReader = new LocalContactReader(resolver);
   }
 
-  public void syncContacts(Account account, List<ApiClient.UserInfoResponse> remoteContacts, SyncResult syncResult) {
+  public void syncContacts(Account account, List<UserInfoResponse> remoteContacts, SyncResult syncResult) {
     Map<String, LocalContactReader.LocalContact> storedContacts = localContactReader.getContacts(account);
 
     Set<String> activeEmails = new HashSet<>();
-    for (ApiClient.UserInfoResponse remoteContact : remoteContacts) {
+    for (UserInfoResponse remoteContact : remoteContacts) {
       LocalContactReader.LocalContact localContact = storedContacts.get(remoteContact.email);
       if (localContact != null) {
         updateExistingContact(localContact, remoteContact);
@@ -57,7 +58,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void updateExistingContact(LocalContactReader.LocalContact localContact, ApiClient.UserInfoResponse remoteContact) {
+  private void updateExistingContact(LocalContactReader.LocalContact localContact, UserInfoResponse remoteContact) {
     Log.i(TAG, "Updating existing contact " + remoteContact.email + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
@@ -82,7 +83,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void syncName(LocalContactReader.LocalContact localContact, ApiClient.UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
+  private void syncName(LocalContactReader.LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.displayName) && !nullOrEmpty(remoteContact.name)) {
       // missing on local contact, insert it
       ops.add(buildDisplayNameInsert(remoteContact.name).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
@@ -104,7 +105,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void syncMobilePhoneNumber(LocalContactReader.LocalContact localContact, ApiClient.UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
+  private void syncMobilePhoneNumber(LocalContactReader.LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.phoneNumber) && !nullOrEmpty(remoteContact.phoneNumber)) {
       // missing on local contact, insert it
       ops.add(buildPhoneNumberInsert(remoteContact.phoneNumber).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
@@ -126,7 +127,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void syncFixedPhoneNumber(LocalContactReader.LocalContact localContact, ApiClient.UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
+  private void syncFixedPhoneNumber(LocalContactReader.LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.fixedPhoneNumber) && !nullOrEmpty(remoteContact.fixedPhoneNumber)) {
       // missing on local contact, insert it
       ops.add(buildFixedPhoneNumberInsert(remoteContact.fixedPhoneNumber).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
@@ -148,7 +149,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void insertNewContact(Account account, long groupId, ApiClient.UserInfoResponse remoteContact) {
+  private void insertNewContact(Account account, long groupId, UserInfoResponse remoteContact) {
     Log.i(TAG, "Inserting new contact " + remoteContact.email + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();

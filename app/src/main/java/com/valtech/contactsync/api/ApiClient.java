@@ -1,9 +1,10 @@
-package com.valtech.contactsync;
+package com.valtech.contactsync.api;
 
 import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
+import com.valtech.contactsync.R;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -134,47 +135,5 @@ public class ApiClient {
 
     @SerializedName("refresh_token")
     public String refreshToken;
-  }
-
-  public static class TokenErrorResponse {
-    public String error;
-
-    @SerializedName("error_description")
-    public String error_description;
-  }
-
-  public static class UserInfoResponse {
-    public String email;
-    public String name;
-
-    @SerializedName("country_code")
-    public String countryCode;
-
-    @SerializedName("phone_number")
-    public String phoneNumber;
-
-    @SerializedName("fixed_phone_number")
-    public String fixedPhoneNumber;
-  }
-
-  public static class OAuthException extends RuntimeException {
-    protected OAuthException(TokenErrorResponse response) {
-      super("OAuth error occurred on token request ('" + response.error + "', '" + response.error_description + "').");
-    }
-
-    protected OAuthException(Header wwwAuthenticateHeader) {
-      super("OAuth error occurred when accessing protected resource (" + wwwAuthenticateHeader.getValue() + ")");
-    }
-
-    public static OAuthException build(TokenErrorResponse response) {
-      if ("invalid_grant".equals(response.error)) return new InvalidGrantException(response);
-      return new OAuthException(response);
-    }
-  }
-
-  public static class InvalidGrantException extends OAuthException {
-    protected InvalidGrantException(TokenErrorResponse response) {
-      super(response);
-    }
   }
 }
