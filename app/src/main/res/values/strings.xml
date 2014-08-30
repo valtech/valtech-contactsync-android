@@ -11,7 +11,7 @@
     <string name="united_states">United States</string>
     <string name="account_preferences_title">Countries to sync</string>
     <string name="account_preferences_summary">From which countries should contacts be fetched</string>
-    <string name="group_prefix">Valtech</string>
+    <string name="group_title_format">Valtech %s</string>
     <string name="error">Error</string>
     <string name="ok">OK</string>
     <string name="auth_error_message">An error occurred communicating with Valtech IDP. Please contact intranet.support@valtech.se.</string>

@@ -26,11 +26,11 @@ public class LocalContactRepository {
   private final ContentResolver resolver;
   private final LocalContactReader localContactReader;
   private final GroupRepository groupRepository;
-  private final String groupPrefix;
+  private final String groupTitleFormat;
 
   public LocalContactRepository(Context context) {
     this.resolver = context.getContentResolver();
-    this.groupPrefix = context.getString(R.string.group_prefix);
+    this.groupTitleFormat = context.getString(R.string.group_title_format);
     this.localContactReader = new LocalContactReader(resolver);
     this.groupRepository = new GroupRepository(resolver);
   }
@@ -45,7 +45,8 @@ public class LocalContactRepository {
         updateExistingContact(localContact, remoteContact);
         syncResult.stats.numUpdates++;
       } else {
-        long groupId = groupRepository.ensureGroup(account, groupPrefix + " " + remoteContact.countryCode.toUpperCase());
+        String groupTitle = String.format(groupTitleFormat, remoteContact.countryCode.toUpperCase());
+        long groupId = groupRepository.ensureGroup(account, groupTitle);
         insertNewContact(account, groupId, remoteContact);
         syncResult.stats.numInserts++;
       }

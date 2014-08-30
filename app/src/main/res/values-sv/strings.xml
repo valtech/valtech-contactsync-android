@@ -10,7 +10,7 @@
     <string name="united_states">USA</string>
     <string name="account_preferences_title">Länder att synka</string>
     <string name="account_preferences_summary">Från vilka länder kontakter ska hämtas</string>
-    <string name="group_prefix">Valtech</string>
+    <string name="group_title_format">Valtech %s</string>
     <string name="error">Fel</string>
     <string name="ok">OK</string>
     <string name="auth_error_message">Ett fel har inträffat vid kommunikation med Valtech IDP. Vänligen kontakta intranet.support@valtech.se.</string>
