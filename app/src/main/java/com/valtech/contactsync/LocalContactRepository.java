@@ -1,8 +1,10 @@
 package com.valtech.contactsync;
 
 import android.accounts.Account;
-import android.content.*;
-import android.database.Cursor;
+import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.SyncResult;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.util.Log;
@@ -23,12 +25,14 @@ public class LocalContactRepository {
 
   private final ContentResolver resolver;
   private final LocalContactReader localContactReader;
+  private final GroupRepository groupRepository;
   private final String groupPrefix;
 
   public LocalContactRepository(Context context) {
     this.resolver = context.getContentResolver();
     this.groupPrefix = context.getString(R.string.group_prefix);
     this.localContactReader = new LocalContactReader(resolver);
+    this.groupRepository = new GroupRepository(resolver);
   }
 
   public void syncContacts(Account account, List<UserInfoResponse> remoteContacts, SyncResult syncResult) {
@@ -41,7 +45,7 @@ public class LocalContactRepository {
         updateExistingContact(localContact, remoteContact);
         syncResult.stats.numUpdates++;
       } else {
-        long groupId = ensureGroup(account, groupPrefix + " " + remoteContact.countryCode.toUpperCase());
+        long groupId = groupRepository.ensureGroup(account, groupPrefix + " " + remoteContact.countryCode.toUpperCase());
         insertNewContact(account, groupId, remoteContact);
         syncResult.stats.numInserts++;
       }
@@ -247,41 +251,5 @@ public class LocalContactRepository {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private long ensureGroup(Account account, String groupTitle) {
-    try {
-      return getGroupId(account, groupTitle);
-    } catch (NoSuchElementException e) {
-      createGroup(account, groupTitle);
-      return getGroupId(account, groupTitle);
-    }
-  }
-
-  private long getGroupId(Account account, String groupTitle) {
-    Cursor cursor = null;
-    try {
-      cursor = resolver.query(ContactsContract.Groups.CONTENT_URI,
-        new String[]{ContactsContract.Groups._ID},
-        ContactsContract.Groups.ACCOUNT_TYPE + " = ? AND " + ContactsContract.Groups.TITLE + " = ?",
-        new String[]{account.type, groupTitle},
-        null);
-      if (cursor.moveToNext()) return cursor.getLong(0);
-    } finally {
-      if (cursor != null) cursor.close();
-    }
-    throw new NoSuchElementException();
-  }
-
-  private void createGroup(Account account, String groupTitle) {
-    ContentValues values = new ContentValues();
-    values.put(ContactsContract.Groups.TITLE, groupTitle);
-    values.put(ContactsContract.Groups.GROUP_VISIBLE, 1);
-    values.put(ContactsContract.Groups.SHOULD_SYNC, 0);
-
-    values.put(ContactsContract.Groups.ACCOUNT_NAME, account.name);
-    values.put(ContactsContract.Groups.ACCOUNT_TYPE, account.type);
-
-    resolver.insert(ContactsContract.Groups.CONTENT_URI, values);
   }
 }
