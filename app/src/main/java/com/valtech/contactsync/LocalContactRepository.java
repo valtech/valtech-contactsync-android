@@ -220,8 +220,7 @@ public class LocalContactRepository {
       BinaryResponse response = apiClient.download(remoteContact.picture + "?s=" + maxPhotoSize + "&d=404", null);
       photoLastModified = response.lastModified;
       photo = response.data;
-    } catch (NoSuchElementException e) {
-      Log.i(TAG, "Remote contact " + remoteContact.email + " has no profile image.");
+    } catch (NoSuchElementException ignore) {
     } catch (IOException e) {
       Log.e(TAG, "Failed to download profile image for " + remoteContact.email + ".", e);
     }

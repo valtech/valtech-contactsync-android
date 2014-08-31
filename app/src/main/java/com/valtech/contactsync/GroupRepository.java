@@ -6,10 +6,13 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
+import android.util.Log;
 
 import java.util.NoSuchElementException;
 
 public class GroupRepository {
+  private static final String TAG = GroupRepository.class.getSimpleName();
+
   // Appending this query parameter means we perform as operations as a sync adapter, not as a user.
   // http://developer.android.com/reference/android/provider/ContactsContract.html#CALLER_IS_SYNCADAPTER
   private static final Uri GROUPS_CONTENT_URI = ContactsContract.Groups.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
@@ -58,5 +61,6 @@ public class GroupRepository {
     values.put(ContactsContract.Groups.ACCOUNT_TYPE, account.type);
 
     resolver.insert(GROUPS_CONTENT_URI, values);
+    Log.i(TAG, "Created group " + groupTitle + ".");
   }
 }
