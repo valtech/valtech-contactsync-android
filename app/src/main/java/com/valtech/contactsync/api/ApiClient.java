@@ -80,19 +80,18 @@ public class ApiClient {
       HttpResponse response = httpClient.execute(httpPost);
 
       int statusCode = response.getStatusLine().getStatusCode();
-      if (statusCode >= 400 && statusCode < 500) {
-        String json = EntityUtils.toString(response.getEntity());
-        TokenErrorResponse tokenErrorResponse = GSON.fromJson(json, TokenErrorResponse.class);
-        throw OAuthException.build(tokenErrorResponse);
-      } else if (statusCode >= 500) {
-        finish(response);
-        throw new RuntimeException("Internal server error occurred.");
+      switch (statusCode) {
+        case 200:
+          String json = EntityUtils.toString(response.getEntity());
+          return GSON.fromJson(json, TokenResponse.class);
+        case 400:
+          json = EntityUtils.toString(response.getEntity());
+          TokenErrorResponse tokenErrorResponse = GSON.fromJson(json, TokenErrorResponse.class);
+          throw OAuthException.build(tokenErrorResponse);
+        default:
+          finish(response);
+          throw new RuntimeException("Unhandled response code " + statusCode + ".");
       }
-
-      String json = EntityUtils.toString(response.getEntity());
-      TokenResponse tokenResponse = GSON.fromJson(json, TokenResponse.class);
-
-      return tokenResponse;
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -107,7 +106,6 @@ public class ApiClient {
     BinaryResponse binaryResponse = new BinaryResponse();
 
     int statusCode = response.getStatusLine().getStatusCode();
-
     switch (statusCode) {
       case 200:
         binaryResponse.data = new ByteArrayOutputStream();
