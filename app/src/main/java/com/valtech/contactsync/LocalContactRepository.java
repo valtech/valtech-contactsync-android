@@ -84,7 +84,7 @@ public class LocalContactRepository {
     ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
       .withSelection(
         Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-        new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE})
+        new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE })
       .withValue(CommonDataKinds.Email.DATA, remoteContact.email)
       .withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK)
       .build());
@@ -110,14 +110,14 @@ public class LocalContactRepository {
       ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-          new String[]{String.valueOf(localContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE})
+          new String[] { String.valueOf(localContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE })
         .build());
     } else if (!nullOrEmpty(localContact.displayName) && !nullOrEmpty(remoteContact.name)) {
       // exists on both local and remote contact, update it
       ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-          new String[]{String.valueOf(localContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE})
+          new String[] { String.valueOf(localContact.rawContactId), StructuredName.CONTENT_ITEM_TYPE })
         .withValue(StructuredName.DISPLAY_NAME, remoteContact.name)
         .build());
     }
@@ -132,14 +132,14 @@ public class LocalContactRepository {
       ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
-          new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE)})
+          new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
         .build());
     } else if (!nullOrEmpty(localContact.phoneNumber) && !nullOrEmpty(remoteContact.phoneNumber)) {
       // exists on both local and remote contact, update it
       ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
-          new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE)})
+          new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
         .withValue(CommonDataKinds.Phone.NUMBER, remoteContact.phoneNumber)
         .build());
     }
@@ -154,14 +154,14 @@ public class LocalContactRepository {
       ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
-          new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK)})
+          new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
         .build());
     } else if (!nullOrEmpty(localContact.fixedPhoneNumber) && !nullOrEmpty(remoteContact.fixedPhoneNumber)) {
       // exists on both local and remote contact, update it
       ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
-          new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK)})
+          new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
         .withValue(CommonDataKinds.Phone.NUMBER, remoteContact.fixedPhoneNumber)
         .build());
     }
@@ -180,14 +180,14 @@ public class LocalContactRepository {
         ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
           .withSelection(
             Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-            new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Photo.CONTENT_ITEM_TYPE})
+            new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Photo.CONTENT_ITEM_TYPE })
           .withValue(CommonDataKinds.Photo.PHOTO, response.data.toByteArray())
           .build());
       }
 
       // always update last modified with last modified from response
       ops.add(ContentProviderOperation.newUpdate(RAW_CONTACT_CONTENT_URI)
-        .withSelection(RawContacts._ID + " = ?", new String[]{String.valueOf(localContact.rawContactId)})
+        .withSelection(RawContacts._ID + " = ?", new String[] { String.valueOf(localContact.rawContactId) })
         .withValue(RawContacts.SYNC1, response.lastModified)
         .build());
     } catch (NoSuchElementException e) {
@@ -198,10 +198,10 @@ public class LocalContactRepository {
       ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-          new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Photo.CONTENT_ITEM_TYPE})
+          new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Photo.CONTENT_ITEM_TYPE })
         .build());
       ops.add(ContentProviderOperation.newUpdate(RAW_CONTACT_CONTENT_URI)
-        .withSelection(RawContacts._ID + " = ?", new String[]{String.valueOf(localContact.rawContactId)})
+        .withSelection(RawContacts._ID + " = ?", new String[] { String.valueOf(localContact.rawContactId) })
         .withValue(RawContacts.SYNC1, null)
         .build());
     } catch (IOException e) {

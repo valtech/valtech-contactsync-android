@@ -37,9 +37,9 @@ public class GroupRepository {
 
     try {
       cursor = resolver.query(ContactsContract.Groups.CONTENT_URI,
-        new String[]{ContactsContract.Groups._ID},
+        new String[] { ContactsContract.Groups._ID },
         ContactsContract.Groups.ACCOUNT_TYPE + " = ? AND " + ContactsContract.Groups.TITLE + " = ?",
-        new String[]{account.type, groupTitle},
+        new String[] { account.type, groupTitle },
         null);
 
       if (cursor.moveToNext()) return cursor.getLong(0);
