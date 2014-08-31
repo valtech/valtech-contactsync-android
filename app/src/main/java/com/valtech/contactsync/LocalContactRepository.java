@@ -104,9 +104,11 @@ public class LocalContactRepository {
   private void syncName(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.displayName) && !nullOrEmpty(remoteContact.name)) {
       // missing on local contact, insert it
+      Log.i(TAG, "Contact " + remoteContact.email + " now has a name, inserting.");
       ops.add(buildDisplayNameInsert(remoteContact.name).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
     } else if (!nullOrEmpty(localContact.displayName) && nullOrEmpty(remoteContact.name)) {
       // exists on local contact, but not on remote - delete it on local
+      Log.i(TAG, "Contact " + remoteContact.email + " does not have a name any longer, deleting from local contact.");
       ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
@@ -126,9 +128,11 @@ public class LocalContactRepository {
   private void syncMobilePhoneNumber(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.phoneNumber) && !nullOrEmpty(remoteContact.phoneNumber)) {
       // missing on local contact, insert it
+      Log.i(TAG, "Contact " + remoteContact.email + " now has a mobile phone number, inserting.");
       ops.add(buildPhoneNumberInsert(remoteContact.phoneNumber).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
     } else if (!nullOrEmpty(localContact.phoneNumber) && nullOrEmpty(remoteContact.phoneNumber)) {
       // exists on local contact, but not on remote - delete it on local
+      Log.i(TAG, "Contact " + remoteContact.email + " does not have a mobile phone number any longer, deleting from local contact.");
       ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
@@ -148,9 +152,11 @@ public class LocalContactRepository {
   private void syncFixedPhoneNumber(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.fixedPhoneNumber) && !nullOrEmpty(remoteContact.fixedPhoneNumber)) {
       // missing on local contact, insert it
+      Log.i(TAG, "Contact " + remoteContact.email + " now has a fixed phone number, inserting.");
       ops.add(buildFixedPhoneNumberInsert(remoteContact.fixedPhoneNumber).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
     } else if (!nullOrEmpty(localContact.fixedPhoneNumber) && nullOrEmpty(remoteContact.fixedPhoneNumber)) {
       // exists on local contact, but not on remote - delete it on local
+      Log.i(TAG, "Contact " + remoteContact.email + " does not have a fixed phone number any longer, deleting from local contact.");
       ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
@@ -173,10 +179,11 @@ public class LocalContactRepository {
 
       if (localContact.photoLastModified == null) {
         // missing on local contact, insert it
+        Log.i(TAG, "Contact " + remoteContact.email + " now has a profile image, inserting.");
         ops.add(buildPhotoInsert(response.data).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
       } else if (!localContact.photoLastModified.equals(response.lastModified)) {
-        Log.i(TAG, "Contact " + remoteContact.email + " has a new profile image, updating.");
         // newer version exist on remote contact, update local
+        Log.i(TAG, "Contact " + remoteContact.email + " has a new profile image, updating.");
         ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
           .withSelection(
             Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
