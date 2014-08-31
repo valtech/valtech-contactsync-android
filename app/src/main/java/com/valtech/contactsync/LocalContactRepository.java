@@ -54,8 +54,8 @@ public class LocalContactRepository {
       LocalContact localContact = storedContacts.get(remoteContact.email);
 
       if (localContact != null) {
-        updateExistingContact(localContact, remoteContact);
-        syncResult.stats.numUpdates++;
+        boolean updated = updateExistingContact(localContact, remoteContact);
+        if (updated) syncResult.stats.numUpdates++;
       } else {
         String groupTitle = String.format(groupTitleFormat, remoteContact.countryCode.toUpperCase());
         long groupId = groupRepository.ensureGroup(account, groupTitle);
@@ -75,7 +75,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void updateExistingContact(LocalContact localContact, UserInfoResponse remoteContact) {
+  private boolean updateExistingContact(LocalContact localContact, UserInfoResponse remoteContact) {
     Log.i(TAG, "Updating existing contact " + remoteContact.email + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
@@ -85,8 +85,11 @@ public class LocalContactRepository {
     syncFixedPhoneNumber(localContact, remoteContact, ops);
     syncPhoto(localContact, remoteContact, ops);
 
+    if (ops.size() == 0) return false;
+
     try {
       resolver.applyBatch(ContactsContract.AUTHORITY, ops);
+      return true;
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -105,8 +108,8 @@ public class LocalContactRepository {
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
           new String[] { localContact.rawContactId, StructuredName.CONTENT_ITEM_TYPE })
         .build());
-    } else if (!nullOrEmpty(localContact.displayName) && !nullOrEmpty(remoteContact.name)) {
-      // exists on both local and remote contact, update it
+    } else if (!nullOrEmpty(localContact.displayName) && !nullOrEmpty(remoteContact.name) && !localContact.displayName.equals(remoteContact.name)) {
+      // exists on both local and remote contact but not equal, update it
       ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
@@ -129,7 +132,7 @@ public class LocalContactRepository {
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
           new String[] { localContact.rawContactId, CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
         .build());
-    } else if (!nullOrEmpty(localContact.phoneNumber) && !nullOrEmpty(remoteContact.phoneNumber)) {
+    } else if (!nullOrEmpty(localContact.phoneNumber) && !nullOrEmpty(remoteContact.phoneNumber) && !localContact.phoneNumber.equals(remoteContact.phoneNumber)) {
       // exists on both local and remote contact, update it
       ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
         .withSelection(
@@ -153,7 +156,7 @@ public class LocalContactRepository {
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
           new String[] { localContact.rawContactId, CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
         .build());
-    } else if (!nullOrEmpty(localContact.fixedPhoneNumber) && !nullOrEmpty(remoteContact.fixedPhoneNumber)) {
+    } else if (!nullOrEmpty(localContact.fixedPhoneNumber) && !nullOrEmpty(remoteContact.fixedPhoneNumber) && !localContact.fixedPhoneNumber.equals(remoteContact.fixedPhoneNumber)) {
       // exists on both local and remote contact, update it
       ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
         .withSelection(
