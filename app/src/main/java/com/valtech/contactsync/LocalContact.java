@@ -1,7 +1,7 @@
 package com.valtech.contactsync;
 
 public class LocalContact {
-  public long rawContactId;
+  public String rawContactId;
   public String sourceId;
   public String displayName;
   public String email;

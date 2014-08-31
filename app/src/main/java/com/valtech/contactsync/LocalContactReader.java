@@ -51,7 +51,7 @@ public class LocalContactReader {
         null, null, null);
 
       LocalContact contact = new LocalContact();
-      contact.rawContactId = rawContactId;
+      contact.rawContactId = String.valueOf(rawContactId);
 
       while (cursor.moveToNext()) {
         contact.sourceId = cursor.getString(0);
