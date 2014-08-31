@@ -24,12 +24,14 @@ public class LocalContactReader {
     Cursor rawContactsCursor = null;
 
     try {
-      rawContactsCursor = resolver.query(RawContacts.CONTENT_URI, new String[] { RawContacts._ID }, RawContacts.ACCOUNT_TYPE + " = ?", new String[] { account.type }, null);
+      rawContactsCursor = resolver.query(RawContacts.CONTENT_URI, new String[] { RawContacts._ID, RawContacts.SYNC1 }, RawContacts.ACCOUNT_TYPE + " = ?", new String[] { account.type }, null);
       Map<String, LocalContact> contacts = new HashMap<>();
 
       while (rawContactsCursor.moveToNext()) {
         long rawContactId = rawContactsCursor.getLong(0);
+        String photoETag = rawContactsCursor.getString(1);
         LocalContact contact = getContact(rawContactId);
+        contact.photoLastModified = photoETag;
         contacts.put(contact.sourceId, contact);
       }
 
@@ -71,14 +73,5 @@ public class LocalContactReader {
     } finally {
       if (cursor != null) cursor.close();
     }
-  }
-
-  public static class LocalContact {
-    public long rawContactId;
-    public String sourceId;
-    public String displayName;
-    public String email;
-    public String phoneNumber;
-    public String fixedPhoneNumber;
   }
 }

@@ -25,7 +25,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
   public SyncAdapter(Context context) {
     super(context, true);
     this.apiClient = new ApiClient(context);
-    this.contactRepository = new LocalContactRepository(context);
+    this.contactRepository = new LocalContactRepository(context, apiClient);
   }
 
   @Override
@@ -67,7 +67,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
       if (Settings.isSyncEnabled(getContext(), c.countryCode)) list.add(c);
       
       // enable row below to limit the accounts to sync (for development)
-      //if (list.size() > 20) break;
+      //if (list.size() > 5) break;
     }
 
     return list;

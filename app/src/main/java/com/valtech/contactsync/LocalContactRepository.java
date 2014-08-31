@@ -5,11 +5,16 @@ import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SyncResult;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.util.Log;
+import com.valtech.contactsync.api.ApiClient;
+import com.valtech.contactsync.api.BinaryResponse;
 import com.valtech.contactsync.api.UserInfoResponse;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
 
 import static android.provider.ContactsContract.*;
@@ -22,25 +27,32 @@ public class LocalContactRepository {
   // Appending this query parameter means we perform as operations as a sync adapter, not as a user.
   // http://developer.android.com/reference/android/provider/ContactsContract.html#CALLER_IS_SYNCADAPTER
   private static final Uri DATA_CONTENT_URI = Data.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
+  private static final Uri RAW_CONTACT_CONTENT_URI = RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
 
   private final ContentResolver resolver;
   private final LocalContactReader localContactReader;
   private final GroupRepository groupRepository;
   private final String groupTitleFormat;
+  private final ApiClient apiClient;
+  private int maxPhotoSize;
 
-  public LocalContactRepository(Context context) {
+  public LocalContactRepository(Context context, ApiClient apiClient) {
     this.resolver = context.getContentResolver();
     this.groupTitleFormat = context.getString(R.string.group_title_format);
     this.localContactReader = new LocalContactReader(resolver);
     this.groupRepository = new GroupRepository(resolver);
+    this.apiClient = apiClient;
   }
 
   public void syncContacts(Account account, List<UserInfoResponse> remoteContacts, SyncResult syncResult) {
-    Map<String, LocalContactReader.LocalContact> storedContacts = localContactReader.getContacts(account);
-
+    Map<String, LocalContact> storedContacts = localContactReader.getContacts(account);
     Set<String> activeEmails = new HashSet<>();
+
+    maxPhotoSize = getMaxPhotoSize();
+
     for (UserInfoResponse remoteContact : remoteContacts) {
-      LocalContactReader.LocalContact localContact = storedContacts.get(remoteContact.email);
+      LocalContact localContact = storedContacts.get(remoteContact.email);
+
       if (localContact != null) {
         updateExistingContact(localContact, remoteContact);
         syncResult.stats.numUpdates++;
@@ -50,12 +62,12 @@ public class LocalContactRepository {
         insertNewContact(account, groupId, remoteContact);
         syncResult.stats.numInserts++;
       }
-      syncResult.stats.numEntries++;
 
+      syncResult.stats.numEntries++;
       activeEmails.add(remoteContact.email);
     }
 
-    for (LocalContactReader.LocalContact localContact : storedContacts.values()) {
+    for (LocalContact localContact : storedContacts.values()) {
       if (activeEmails.contains(localContact.sourceId)) continue;
       deleteInactiveContact(localContact);
       syncResult.stats.numDeletes++;
@@ -63,7 +75,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void updateExistingContact(LocalContactReader.LocalContact localContact, UserInfoResponse remoteContact) {
+  private void updateExistingContact(LocalContact localContact, UserInfoResponse remoteContact) {
     Log.i(TAG, "Updating existing contact " + remoteContact.email + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
@@ -80,6 +92,7 @@ public class LocalContactRepository {
     syncName(localContact, remoteContact, ops);
     syncMobilePhoneNumber(localContact, remoteContact, ops);
     syncFixedPhoneNumber(localContact, remoteContact, ops);
+    syncPhoto(localContact, remoteContact, ops);
 
     try {
       resolver.applyBatch(ContactsContract.AUTHORITY, ops);
@@ -88,7 +101,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void syncName(LocalContactReader.LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
+  private void syncName(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.displayName) && !nullOrEmpty(remoteContact.name)) {
       // missing on local contact, insert it
       ops.add(buildDisplayNameInsert(remoteContact.name).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
@@ -110,7 +123,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void syncMobilePhoneNumber(LocalContactReader.LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
+  private void syncMobilePhoneNumber(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.phoneNumber) && !nullOrEmpty(remoteContact.phoneNumber)) {
       // missing on local contact, insert it
       ops.add(buildPhoneNumberInsert(remoteContact.phoneNumber).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
@@ -132,7 +145,7 @@ public class LocalContactRepository {
     }
   }
 
-  private void syncFixedPhoneNumber(LocalContactReader.LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
+  private void syncFixedPhoneNumber(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     if (nullOrEmpty(localContact.fixedPhoneNumber) && !nullOrEmpty(remoteContact.fixedPhoneNumber)) {
       // missing on local contact, insert it
       ops.add(buildFixedPhoneNumberInsert(remoteContact.fixedPhoneNumber).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
@@ -154,16 +167,73 @@ public class LocalContactRepository {
     }
   }
 
+  private void syncPhoto(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
+    try {
+      BinaryResponse response = apiClient.download(remoteContact.picture + "?s=" + maxPhotoSize + "&d=404", localContact.photoLastModified);
+
+      if (localContact.photoLastModified == null) {
+        // missing on local contact, insert it
+        ops.add(buildPhotoInsert(response.data).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
+      } else if (!localContact.photoLastModified.equals(response.lastModified)) {
+        Log.i(TAG, "Contact " + remoteContact.email + " has a new profile image, updating.");
+        // newer version exist on remote contact, update local
+        ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
+          .withSelection(
+            Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
+            new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Photo.CONTENT_ITEM_TYPE})
+          .withValue(CommonDataKinds.Photo.PHOTO, response.data.toByteArray())
+          .build());
+      }
+
+      // always update last modified with last modified from response
+      ops.add(ContentProviderOperation.newUpdate(RAW_CONTACT_CONTENT_URI)
+        .withSelection(RawContacts._ID + " = ?", new String[]{String.valueOf(localContact.rawContactId)})
+        .withValue(RawContacts.SYNC1, response.lastModified)
+        .build());
+    } catch (NoSuchElementException e) {
+      if (nullOrEmpty(localContact.photoLastModified)) return; // contact has no image and has never had one
+      Log.i(TAG, "Contact " + remoteContact.email + " does not have a profile image any longer, deleting from local contact.");
+
+      // exists on local contact, but not on remote - delete on local
+      ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
+        .withSelection(
+          Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
+          new String[]{String.valueOf(localContact.rawContactId), CommonDataKinds.Photo.CONTENT_ITEM_TYPE})
+        .build());
+      ops.add(ContentProviderOperation.newUpdate(RAW_CONTACT_CONTENT_URI)
+        .withSelection(RawContacts._ID + " = ?", new String[]{String.valueOf(localContact.rawContactId)})
+        .withValue(RawContacts.SYNC1, null)
+        .build());
+    } catch (IOException e) {
+      // network error during download - don't rethrow, let's not fail the whole sync for this
+      Log.e(TAG, "Failed to download profile image for " + remoteContact.email + ".", e);
+    }
+  }
+
   private void insertNewContact(Account account, long groupId, UserInfoResponse remoteContact) {
     Log.i(TAG, "Inserting new contact " + remoteContact.email + ".");
 
+    String photoLastModified = null;
+    ByteArrayOutputStream photo = null;
+
+    try {
+      BinaryResponse response = apiClient.download(remoteContact.picture + "?s=" + maxPhotoSize + "&d=404", null);
+      photoLastModified = response.lastModified;
+      photo = response.data;
+    } catch (NoSuchElementException e) {
+      Log.i(TAG, "Remote contact " + remoteContact.email + " has no profile image.");
+    } catch (IOException e) {
+      Log.e(TAG, "Failed to download profile image for " + remoteContact.email + ".", e);
+    }
+
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-    final int backReferenceIndex = 0;
+    int backReferenceIndex = 0;
 
     ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build())
       .withValue(RawContacts.ACCOUNT_TYPE, account.type)
       .withValue(RawContacts.ACCOUNT_NAME, account.name)
       .withValue(RawContacts.SOURCE_ID, remoteContact.email)
+      .withValue(RawContacts.SYNC1, photoLastModified)
       .build());
 
     // Email, always available from IDP
@@ -191,6 +261,13 @@ public class LocalContactRepository {
     // Fixed phone
     if (!nullOrEmpty(remoteContact.fixedPhoneNumber)) {
       ops.add(buildFixedPhoneNumberInsert(remoteContact.fixedPhoneNumber)
+        .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+        .build());
+    }
+
+    // Photo
+    if (photo != null) {
+      ops.add(buildPhotoInsert(photo)
         .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
         .build());
     }
@@ -229,11 +306,17 @@ public class LocalContactRepository {
       .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK);
   }
 
+  private ContentProviderOperation.Builder buildPhotoInsert(ByteArrayOutputStream photo) {
+    return ContentProviderOperation.newInsert(DATA_CONTENT_URI)
+      .withValue(Data.MIMETYPE, CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+      .withValue(CommonDataKinds.Photo.PHOTO, photo.toByteArray());
+  }
+
   private boolean nullOrEmpty(String s) {
     return s == null || s.isEmpty();
   }
 
-  private void deleteInactiveContact(LocalContactReader.LocalContact localContact) {
+  private void deleteInactiveContact(LocalContact localContact) {
     Log.i(TAG, "Deleting contact " + localContact.sourceId + ".");
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
@@ -251,6 +334,19 @@ public class LocalContactRepository {
       resolver.applyBatch(ContactsContract.AUTHORITY, ops);
     } catch (Exception e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private int getMaxPhotoSize() {
+    Uri uri = ContactsContract.DisplayPhoto.CONTENT_MAX_DIMENSIONS_URI;
+    String[] projection = new String[] { ContactsContract.DisplayPhoto.DISPLAY_MAX_DIM };
+    Cursor cursor = resolver.query(uri, projection, null, null, null);
+
+    try {
+      cursor.moveToFirst();
+      return cursor.getInt(0);
+    } finally {
+      cursor.close();
     }
   }
 }

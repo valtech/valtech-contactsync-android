@@ -16,11 +16,12 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class ApiClient {
   private static final Gson GSON = new Gson();
@@ -95,6 +96,50 @@ public class ApiClient {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public BinaryResponse download(String url, String lastModified) throws IOException {
+    HttpClient httpClient = new DefaultHttpClient();
+    HttpGet request = new HttpGet(url);
+    if (lastModified != null) request.setHeader("If-Modified-Since", lastModified);
+
+    HttpResponse response = httpClient.execute(request);
+    BinaryResponse binaryResponse = new BinaryResponse();
+
+    int statusCode = response.getStatusLine().getStatusCode();
+
+    switch (statusCode) {
+      case 404:
+        finish(response);
+        throw new NoSuchElementException();
+      case 304:
+        finish(response);
+        binaryResponse.lastModified = lastModified;
+        return binaryResponse;
+      case 200:
+        binaryResponse.data = new ByteArrayOutputStream();
+        binaryResponse.lastModified = getLastModifiedHeader(response);
+        response.getEntity().writeTo(binaryResponse.data);
+        return binaryResponse;
+      default:
+        finish(response);
+        throw new RuntimeException("Unhandled response code.");
+    }
+  }
+
+  private String getLastModifiedHeader(HttpResponse response) {
+    Header header = response.getFirstHeader("Last-Modified");
+    if (header == null) return getCurrentHttpDate();
+    if (header.getValue() == null) return getCurrentHttpDate();
+    if (header.getValue().isEmpty()) return getCurrentHttpDate();
+    return header.getValue();
+  }
+
+  private String getCurrentHttpDate() {
+    Calendar cal = Calendar.getInstance();
+    DateFormat df = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+    df.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return df.format(cal.getTime());
   }
 
   public UserInfoResponse getUserInfoMeResource(String accessToken) {

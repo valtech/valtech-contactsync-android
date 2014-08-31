@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 public class UserInfoResponse {
   public String email;
   public String name;
+  public String picture;
 
   @SerializedName("country_code")
   public String countryCode;
