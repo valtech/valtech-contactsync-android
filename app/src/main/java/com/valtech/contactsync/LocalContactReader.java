@@ -29,9 +29,9 @@ public class LocalContactReader {
 
       while (rawContactsCursor.moveToNext()) {
         long rawContactId = rawContactsCursor.getLong(0);
-        String photoETag = rawContactsCursor.getString(1);
+        String photoLastModified = rawContactsCursor.getString(1);
         LocalContact contact = getContact(rawContactId);
-        contact.photoLastModified = photoETag;
+        contact.photoLastModified = photoLastModified;
         contacts.put(contact.sourceId, contact);
       }
 
