@@ -35,14 +35,14 @@ public class ApiClient {
   private final String followUpScope;
 
   public ApiClient(Context context) {
-    authorizeUrl = context.getString(R.string.idp_authorize_url);
-    tokenUrl = context.getString(R.string.idp_token_url);
-    userInfoUrl = context.getString(R.string.idp_user_info_url);
-    allUserInfosUrl = context.getString(R.string.idp_all_user_infos_url);
-    clientId = context.getString(R.string.idp_client_id);
-    clientSecret = context.getString(R.string.idp_client_secret);
-    initialScope = context.getString(R.string.idp_initial_scope);
-    followUpScope = context.getString(R.string.idp_follow_up_scope);
+    this.authorizeUrl = context.getString(R.string.idp_authorize_url);
+    this.tokenUrl = context.getString(R.string.idp_token_url);
+    this.userInfoUrl = context.getString(R.string.idp_user_info_url);
+    this.allUserInfosUrl = context.getString(R.string.idp_all_user_infos_url);
+    this.clientId = context.getString(R.string.idp_client_id);
+    this.clientSecret = context.getString(R.string.idp_client_secret);
+    this.initialScope = context.getString(R.string.idp_initial_scope);
+    this.followUpScope = context.getString(R.string.idp_follow_up_scope);
   }
 
   public String getAuthorizeUrl() {
@@ -84,6 +84,7 @@ public class ApiClient {
         TokenErrorResponse tokenErrorResponse = GSON.fromJson(json, TokenErrorResponse.class);
         throw OAuthException.build(tokenErrorResponse);
       } else if (statusCode >= 500) {
+        finish(response);
         throw new RuntimeException("Internal server error occurred.");
       }
 
@@ -115,8 +116,10 @@ public class ApiClient {
       int statusCode = response.getStatusLine().getStatusCode();
       if (statusCode >= 400 && statusCode < 500) {
         Header wwwAuthenticateHeader = response.getFirstHeader("WWW-Authenticate");
-        throw new OAuthException(wwwAuthenticateHeader);
+        finish(response);
+        throw OAuthException.build(wwwAuthenticateHeader);
       } else if (statusCode >= 500) {
+        finish(response);
         throw new RuntimeException("Internal server error occurred.");
       }
 
@@ -127,6 +130,14 @@ public class ApiClient {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private void finish(HttpResponse response) throws IOException {
+    if (response.getEntity() == null) return;
+    // consumeContent() will be renamed to finish() in next major, as it actually releases all resources
+    // and allows the underlying http connection to be reused.
+    // http://developer.android.com/reference/org/apache/http/HttpEntity.html#consumeContent()
+    response.getEntity().consumeContent();
   }
 
   public static class TokenResponse {
