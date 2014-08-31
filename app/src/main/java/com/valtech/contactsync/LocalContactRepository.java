@@ -133,7 +133,7 @@ public class LocalContactRepository {
           new String[] { localContact.rawContactId, CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK_MOBILE) })
         .build());
     } else if (!nullOrEmpty(localContact.phoneNumber) && !nullOrEmpty(remoteContact.phoneNumber) && !localContact.phoneNumber.equals(remoteContact.phoneNumber)) {
-      // exists on both local and remote contact, update it
+      // exists on both local and remote contact but not equal, update it
       ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
@@ -157,7 +157,7 @@ public class LocalContactRepository {
           new String[] { localContact.rawContactId, CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
         .build());
     } else if (!nullOrEmpty(localContact.fixedPhoneNumber) && !nullOrEmpty(remoteContact.fixedPhoneNumber) && !localContact.fixedPhoneNumber.equals(remoteContact.fixedPhoneNumber)) {
-      // exists on both local and remote contact, update it
+      // exists on both local and remote contact but not equal, update it
       ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
         .withSelection(
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
