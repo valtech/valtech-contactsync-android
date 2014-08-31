@@ -109,21 +109,21 @@ public class ApiClient {
     int statusCode = response.getStatusLine().getStatusCode();
 
     switch (statusCode) {
-      case 404:
-        finish(response);
-        throw new NoSuchElementException();
-      case 304:
-        finish(response);
-        binaryResponse.lastModified = lastModified;
-        return binaryResponse;
       case 200:
         binaryResponse.data = new ByteArrayOutputStream();
         binaryResponse.lastModified = getLastModifiedHeader(response);
         response.getEntity().writeTo(binaryResponse.data);
         return binaryResponse;
+      case 304:
+        finish(response);
+        binaryResponse.lastModified = lastModified;
+        return binaryResponse;
+      case 404:
+        finish(response);
+        throw new NoSuchElementException();
       default:
         finish(response);
-        throw new RuntimeException("Unhandled response code.");
+        throw new RuntimeException("Unhandled response code " + statusCode + ".");
     }
   }
 
@@ -159,19 +159,18 @@ public class ApiClient {
       HttpResponse response = httpClient.execute(httpGet);
 
       int statusCode = response.getStatusLine().getStatusCode();
-      if (statusCode >= 400 && statusCode < 500) {
-        Header wwwAuthenticateHeader = response.getFirstHeader("WWW-Authenticate");
-        finish(response);
-        throw OAuthException.build(wwwAuthenticateHeader);
-      } else if (statusCode >= 500) {
-        finish(response);
-        throw new RuntimeException("Internal server error occurred.");
+      switch (statusCode) {
+        case 200:
+          String json = EntityUtils.toString(response.getEntity());
+          return GSON.fromJson(json, type);
+        case 401:
+          Header wwwAuthenticateHeader = response.getFirstHeader("WWW-Authenticate");
+          finish(response);
+          throw OAuthException.build(wwwAuthenticateHeader);
+        default:
+          finish(response);
+          throw new RuntimeException("Unhandled response code " + statusCode + ".");
       }
-
-      String json = EntityUtils.toString(response.getEntity());
-      T typedResponse = GSON.fromJson(json, type);
-
-      return typedResponse;
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
