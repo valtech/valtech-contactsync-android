@@ -4,11 +4,16 @@ import android.accounts.Account;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 import android.provider.ContactsContract;
 
 import java.util.NoSuchElementException;
 
 public class GroupRepository {
+  // Appending this query parameter means we perform as operations as a sync adapter, not as a user.
+  // http://developer.android.com/reference/android/provider/ContactsContract.html#CALLER_IS_SYNCADAPTER
+  private static final Uri GROUPS_CONTENT_URI = ContactsContract.Groups.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
+
   private final ContentResolver resolver;
 
   public GroupRepository(ContentResolver resolver) {
@@ -52,6 +57,6 @@ public class GroupRepository {
     values.put(ContactsContract.Groups.ACCOUNT_NAME, account.name);
     values.put(ContactsContract.Groups.ACCOUNT_TYPE, account.type);
 
-    resolver.insert(ContactsContract.Groups.CONTENT_URI, values);
+    resolver.insert(GROUPS_CONTENT_URI, values);
   }
 }
