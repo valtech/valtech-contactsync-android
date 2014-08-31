@@ -80,15 +80,6 @@ public class LocalContactRepository {
 
     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
-    // Email, can never be missing, always update
-    ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
-      .withSelection(
-        Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
-        new String[] { String.valueOf(localContact.rawContactId), CommonDataKinds.Email.CONTENT_ITEM_TYPE })
-      .withValue(CommonDataKinds.Email.DATA, remoteContact.email)
-      .withValue(CommonDataKinds.Email.TYPE, CommonDataKinds.Email.TYPE_WORK)
-      .build());
-
     syncName(localContact, remoteContact, ops);
     syncMobilePhoneNumber(localContact, remoteContact, ops);
     syncFixedPhoneNumber(localContact, remoteContact, ops);
