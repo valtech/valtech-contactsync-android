@@ -4,7 +4,7 @@ This android app syncs contact details for Valtech employees to your phone.
 It is connected to Valtech's identity provider (Valtech IDP), https://id.valtech.com/.
 
 This app also serves to demonstrate how easy it is to integrate with Valtech IDP and its OAuth 2 interface.
-It also serves as a public, free and open source (MIT) example of how to write a Contact Provider for Android.
+It also serves as a public, free and open source ([MIT](LICENSE.md)) example of how to write a Contact Provider for Android.
 
 
 ## How to use
