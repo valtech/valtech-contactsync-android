@@ -172,6 +172,7 @@ public class LocalContactRepository {
         // missing on local contact, insert it
         Log.i(TAG, "Contact " + remoteContact.email + " now has a profile image, inserting.");
         ops.add(buildPhotoInsert(response.data).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
+        ops.add(buildPhotoLastModifiedUpdate(localContact.rawContactId, response.lastModified));
       } else if (!localContact.photoLastModified.equals(response.lastModified)) {
         // newer version exist on remote contact, update local
         Log.i(TAG, "Contact " + remoteContact.email + " has a new profile image, updating.");
@@ -181,13 +182,8 @@ public class LocalContactRepository {
             new String[] { localContact.rawContactId, CommonDataKinds.Photo.CONTENT_ITEM_TYPE })
           .withValue(CommonDataKinds.Photo.PHOTO, response.data.toByteArray())
           .build());
+        ops.add(buildPhotoLastModifiedUpdate(localContact.rawContactId, response.lastModified));
       }
-
-      // always update last modified with last modified from response
-      ops.add(ContentProviderOperation.newUpdate(RAW_CONTACT_CONTENT_URI)
-        .withSelection(RawContacts._ID + " = ?", new String[] { localContact.rawContactId })
-        .withValue(RawContacts.SYNC1, response.lastModified)
-        .build());
     } catch (NoSuchElementException e) {
       if (nullOrEmpty(localContact.photoLastModified)) return; // contact has no image and has never had one
       Log.i(TAG, "Contact " + remoteContact.email + " does not have a profile image any longer, deleting from local contact.");
@@ -198,10 +194,7 @@ public class LocalContactRepository {
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ?",
           new String[] { localContact.rawContactId, CommonDataKinds.Photo.CONTENT_ITEM_TYPE })
         .build());
-      ops.add(ContentProviderOperation.newUpdate(RAW_CONTACT_CONTENT_URI)
-        .withSelection(RawContacts._ID + " = ?", new String[] { localContact.rawContactId })
-        .withValue(RawContacts.SYNC1, null)
-        .build());
+      ops.add(buildPhotoLastModifiedUpdate(localContact.rawContactId, null));
     } catch (IOException e) {
       // network error during download - don't rethrow, let's not fail the whole sync for this
       Log.e(TAG, "Failed to download profile image for " + remoteContact.email + ".", e);
@@ -282,6 +275,13 @@ public class LocalContactRepository {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private ContentProviderOperation buildPhotoLastModifiedUpdate(String rawContactId, String lastModified) {
+    return ContentProviderOperation.newUpdate(RAW_CONTACT_CONTENT_URI)
+      .withSelection(RawContacts._ID + " = ?", new String[] { rawContactId })
+      .withValue(RawContacts.SYNC1, lastModified)
+      .build();
   }
 
   private ContentProviderOperation.Builder buildDisplayNameInsert(String displayName) {
