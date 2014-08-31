@@ -169,7 +169,7 @@ public class LocalContactRepository {
 
   private void syncPhoto(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
     try {
-      BinaryResponse response = apiClient.download(remoteContact.picture + "?s=" + maxPhotoSize + "&d=404", localContact.photoLastModified);
+      BinaryResponse response = apiClient.downloadGravatarImage(remoteContact.picture, maxPhotoSize, localContact.photoLastModified);
 
       if (localContact.photoLastModified == null) {
         // missing on local contact, insert it
@@ -217,11 +217,12 @@ public class LocalContactRepository {
     ByteArrayOutputStream photo = null;
 
     try {
-      BinaryResponse response = apiClient.download(remoteContact.picture + "?s=" + maxPhotoSize + "&d=404", null);
+      BinaryResponse response = apiClient.downloadGravatarImage(remoteContact.picture, maxPhotoSize, null);
       photoLastModified = response.lastModified;
       photo = response.data;
     } catch (NoSuchElementException ignore) {
     } catch (IOException e) {
+      // network error during download - don't rethrow, let's not fail the whole sync for this
       Log.e(TAG, "Failed to download profile image for " + remoteContact.email + ".", e);
     }
 

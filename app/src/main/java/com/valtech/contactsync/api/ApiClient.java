@@ -65,6 +65,11 @@ public class ApiClient {
     return tokenResponse.accessToken;
   }
 
+  public BinaryResponse downloadGravatarImage(String url, int maxSize, String lastModified) throws IOException {
+    String gravatarUrl = url + "?s=" + maxSize + "&d=404";
+    return download(gravatarUrl, lastModified);
+  }
+
   private TokenResponse tokenRequest(NameValuePair... fields) {
     HttpClient httpClient = new DefaultHttpClient();
     HttpPost httpPost = new HttpPost(tokenUrl);
@@ -97,7 +102,30 @@ public class ApiClient {
     }
   }
 
-  public BinaryResponse download(String url, String lastModified) throws IOException {
+  private String getLastModifiedHeader(HttpResponse response) {
+    Header header = response.getFirstHeader("Last-Modified");
+    if (header == null) return getCurrentHttpDate();
+    if (header.getValue() == null) return getCurrentHttpDate();
+    if (header.getValue().isEmpty()) return getCurrentHttpDate();
+    return header.getValue();
+  }
+
+  private String getCurrentHttpDate() {
+    Calendar cal = Calendar.getInstance();
+    DateFormat df = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+    df.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return df.format(cal.getTime());
+  }
+
+  public UserInfoResponse getUserInfoMeResource(String accessToken) {
+    return getProtectedResource(userInfoUrl, accessToken, UserInfoResponse.class);
+  }
+
+  public List<UserInfoResponse> getUserInfoResources(String accessToken) {
+    return getProtectedResource(allUserInfosUrl, accessToken, new TypeToken<List<UserInfoResponse>>(){}.getType());
+  }
+
+  private BinaryResponse download(String url, String lastModified) throws IOException {
     HttpClient httpClient = new DefaultHttpClient();
     HttpGet request = new HttpGet(url);
     if (lastModified != null) request.setHeader("If-Modified-Since", lastModified);
@@ -123,29 +151,6 @@ public class ApiClient {
         finish(response);
         throw new RuntimeException("Unhandled response code " + statusCode + ".");
     }
-  }
-
-  private String getLastModifiedHeader(HttpResponse response) {
-    Header header = response.getFirstHeader("Last-Modified");
-    if (header == null) return getCurrentHttpDate();
-    if (header.getValue() == null) return getCurrentHttpDate();
-    if (header.getValue().isEmpty()) return getCurrentHttpDate();
-    return header.getValue();
-  }
-
-  private String getCurrentHttpDate() {
-    Calendar cal = Calendar.getInstance();
-    DateFormat df = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
-    df.setTimeZone(TimeZone.getTimeZone("UTC"));
-    return df.format(cal.getTime());
-  }
-
-  public UserInfoResponse getUserInfoMeResource(String accessToken) {
-    return getProtectedResource(userInfoUrl, accessToken, UserInfoResponse.class);
-  }
-
-  public List<UserInfoResponse> getUserInfoResources(String accessToken) {
-    return getProtectedResource(allUserInfosUrl, accessToken, new TypeToken<List<UserInfoResponse>>(){}.getType());
   }
 
   private <T> T getProtectedResource(String url, String accessToken, Type type) {
