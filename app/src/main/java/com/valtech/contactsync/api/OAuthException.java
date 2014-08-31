@@ -7,7 +7,7 @@ public class OAuthException extends RuntimeException {
     super(message);
   }
 
-  private OAuthException(TokenErrorResponse response) {
+  protected OAuthException(TokenErrorResponse response) {
     super("OAuth error occurred on token request ('" + response.error + "', '" + response.error_description + "').");
   }
 
