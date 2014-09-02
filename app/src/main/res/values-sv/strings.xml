@@ -14,4 +14,5 @@
     <string name="error">Fel</string>
     <string name="ok">OK</string>
     <string name="auth_error_message">Ett fel har inträffat vid kommunikation med Valtech IDP. Vänligen kontakta intranet.support@valtech.se.</string>
+    <string name="account_added_toast">Kontot %s har lagts till.</string>
 </resources>

@@ -15,4 +15,5 @@
     <string name="error">Error</string>
     <string name="ok">OK</string>
     <string name="auth_error_message">An error occurred communicating with Valtech IDP. Please contact intranet.support@valtech.se.</string>
+    <string name="account_added_toast">Account %s added successfully.</string>
 </resources>

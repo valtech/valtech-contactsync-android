@@ -6,84 +6,38 @@ import android.accounts.AccountManager;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
-import android.graphics.Bitmap;
-import android.net.Uri;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
-import android.view.Window;
-import android.webkit.CookieManager;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.widget.Toast;
 import com.valtech.contactsync.api.ApiClient;
 import com.valtech.contactsync.api.OAuthException;
 import com.valtech.contactsync.api.UserInfoResponse;
 import com.valtech.contactsync.setting.Settings;
 
-import java.util.HashMap;
-
 public class SignInActivity extends AccountAuthenticatorActivity {
   private static final String TAG = SignInActivity.class.getSimpleName();
 
   private ApiClient apiClient;
-  private WebView webView;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
     apiClient = new ApiClient(this);
-    webView = new WebView(this);
+    Intent intent = getIntent();
 
-    WebViewClient client = new IdpWebViewClient();
-    webView.getSettings().setJavaScriptEnabled(true);
-    webView.getSettings().setSaveFormData(false);
-    webView.setWebViewClient(client);
-    CookieManager.getInstance().removeAllCookie();
-    requestWindowFeature(Window.FEATURE_NO_TITLE);
-    setContentView(webView);
-
-    if (savedInstanceState == null) {
-      // the activity was not restarted due to orientation change or similar,
-      // perform authorize from the beginning
-      webView.loadUrl(apiClient.getAuthorizeUrl(), new HashMap<String, String>() {{
-        put("X-Idp-Client-Type", "native");
-      }});
-    }
-  }
-
-  @Override
-  protected void onSaveInstanceState(Bundle outState) {
-    super.onSaveInstanceState(outState);
-    webView.saveState(outState);
-  }
-
-  @Override
-  protected void onRestoreInstanceState(Bundle savedInstanceState) {
-    super.onRestoreInstanceState(savedInstanceState);
-    webView.restoreState(savedInstanceState);
-  }
-
-  private class IdpWebViewClient extends WebViewClient {
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-      return url.startsWith("vidp://");
-    }
-
-    @Override
-    public void onPageStarted(WebView view, String url, Bitmap favicon) {
-      if (!url.startsWith("vidp://")) {
-        super.onPageStarted(view, url, favicon);
-        return;
-      }
-
-      // clear cookies as the sign in step is now done
-      CookieManager.getInstance().removeAllCookie();
-
-      Uri uri = Uri.parse(url);
-      final String code = uri.getQueryParameter("code");
-
+    if (intent != null && intent.getData() != null && getString(R.string.app_scheme).equals(intent.getData().getScheme())) {
+      Log.i(TAG, "OAuth callback received.");
+      String code = getIntent().getData().getQueryParameter("code");
       new SignInTask().execute(code);
+    } else {
+      Log.i(TAG, "Launching browser to start OAuth flow.");
+      Intent browserIntent = new Intent(Intent.ACTION_VIEW, apiClient.getAuthorizeUrl());
+      startActivity(browserIntent);
+      finish();
     }
   }
 
@@ -149,6 +103,8 @@ public class SignInActivity extends AccountAuthenticatorActivity {
           })
           .show();
       } else {
+        String accountName = result.getString(AccountManager.KEY_ACCOUNT_NAME);
+        Toast.makeText(SignInActivity.this, String.format(getString(R.string.account_added_toast), accountName), Toast.LENGTH_LONG).show();
         SignInActivity.this.setAccountAuthenticatorResult(result);
         SignInActivity.this.finish();
       }

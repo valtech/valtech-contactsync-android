@@ -2,4 +2,5 @@
 <resources>
     <!-- Internal settings, do not translate -->
     <string translatable="false" name="account_type">com.valtech.contactsync.account</string>
+    <string translatable="false" name="app_scheme">vidp-contact-sync</string>
 </resources>
