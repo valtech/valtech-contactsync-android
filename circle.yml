@@ -8,3 +8,8 @@ dependencies:
     - ~/android
   override:
     - ./install-dependencies.sh
+    - cp idp.xml.template app/src/main/res/values/idp.xml
+
+test:
+  override:
+    ./gradlew clean build
