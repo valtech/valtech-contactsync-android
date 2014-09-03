@@ -1,9 +1,10 @@
 machine:
   environment:
     ANDROID_HOME: /home/ubuntu/android
-  dependencies:
-    cache_directories:
-      - ~/.android
-      - ~/android
-    pre:
-      - ./install-dependencies.sh
+    
+dependencies:
+  cache_directories:
+    - ~/.android
+    - ~/android
+  override:
+    - ./install-dependencies.sh
