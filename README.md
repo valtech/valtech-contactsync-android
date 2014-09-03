@@ -1,5 +1,7 @@
 # Valtech Contact Sync Android
 
+[![Circle CI](https://circleci.com/gh/valtech/valtech-contactsync-android/tree/develop.png?style=badge)](https://circleci.com/gh/valtech/valtech-contactsync-android/tree/develop)
+
 This android app syncs contact details for Valtech employees to your phone.
 It is connected to Valtech's identity provider (Valtech IDP), https://id.valtech.com/.
 
