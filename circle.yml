@@ -4,7 +4,6 @@ machine:
 
 dependencies:
   cache_directories:
-    - ~/.gradle
     - ~/.android
     - ~/android
   override:
