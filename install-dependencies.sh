@@ -13,3 +13,5 @@ if [ ! -e $DEPS ]; then
   echo y | android update sdk -u -a -t build-tools-20.0.0 &&
   touch $DEPS
 fi
+
+echo $LONG_NAME | base64 --decode
