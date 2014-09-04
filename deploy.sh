@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-echo $VALTECH_KEYSTORE | base64 --decode -o valtech.keystore
+echo $VALTECH_KEYSTORE | base64 --decode > valtech.keystore
 set +e
 ./gradlew assembleRelease
 rm -f valtech.keystore
