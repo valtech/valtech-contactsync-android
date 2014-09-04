@@ -8,6 +8,8 @@ dependencies:
     - ~/android
   override:
     - ./install-dependencies.sh
+    - sed -i "s/stage-id.valtech.com/id.valtech.com/g" idp.xml.template
+    - sed -i "s/CLIENT_SECRET_HERE/$IDP_CLIENT_SECRET/g" idp.xml.template
     - cp idp.xml.template app/src/main/res/values/idp.xml
 
 test:
