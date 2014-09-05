@@ -57,7 +57,7 @@ You can revoke access for the app at any time at https://id.valtech.com/.
 ### Automatically using CircleCI
 
 1. Update `versionCode` and `versionName` in `app/build.gradle`.
-2. Push to master.
+2. Push to develop and merge to master.
 3. Go to https://circleci.com/gh/valtech/valtech-contactsync-android/tree/master.
 4. Click your build, **Build artifacts** and download the **app-release.apk**.
 5. Upload `app/build/apk/app-release.apk` to [Google Play Developer Console](https://play.google.com/apps/publish/).
