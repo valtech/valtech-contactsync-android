@@ -83,6 +83,7 @@ public class LocalContactRepository {
     syncName(localContact, remoteContact, ops);
     syncMobilePhoneNumber(localContact, remoteContact, ops);
     syncFixedPhoneNumber(localContact, remoteContact, ops);
+    syncShortPhoneNumber(localContact, remoteContact, ops);
     syncPhoto(localContact, remoteContact, ops);
 
     if (ops.size() == 0) return false;
@@ -163,6 +164,31 @@ public class LocalContactRepository {
           Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
           new String[] { localContact.rawContactId, CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_WORK) })
         .withValue(CommonDataKinds.Phone.NUMBER, remoteContact.fixedPhoneNumber)
+        .build());
+    }
+  }
+
+  private void syncShortPhoneNumber(LocalContact localContact, UserInfoResponse remoteContact, ArrayList<ContentProviderOperation> ops) {
+    String shortPhoneNumber = getShortPhoneNumber(remoteContact);
+    if (nullOrEmpty(localContact.shortPhoneNumber) && !nullOrEmpty(shortPhoneNumber)) {
+      // missing on local contact, insert it
+      Log.i(TAG, "Contact " + remoteContact.email + " now has a short phone number, inserting.");
+      ops.add(buildShortPhoneNumberInsert(shortPhoneNumber).withValue(Data.RAW_CONTACT_ID, localContact.rawContactId).build());
+    } else if (!nullOrEmpty(localContact.shortPhoneNumber) && nullOrEmpty(shortPhoneNumber)) {
+      // exists on local contact, but not on remote - delete it on local
+      Log.i(TAG, "Contact " + remoteContact.email + " does not have a short phone number any longer, deleting from local contact.");
+      ops.add(ContentProviderOperation.newDelete(DATA_CONTENT_URI)
+        .withSelection(
+          Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
+          new String[] { localContact.rawContactId, CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_OTHER) })
+        .build());
+    } else if (!nullOrEmpty(localContact.shortPhoneNumber) && !nullOrEmpty(shortPhoneNumber) && !localContact.shortPhoneNumber.equals(shortPhoneNumber)) {
+      // exists on both local and remote contact but not equal, update it
+      ops.add(ContentProviderOperation.newUpdate(DATA_CONTENT_URI)
+        .withSelection(
+          Data.RAW_CONTACT_ID + " = ? AND " + Data.MIMETYPE + " = ? AND " + CommonDataKinds.Phone.TYPE + " = ?",
+          new String[] { localContact.rawContactId, CommonDataKinds.Phone.CONTENT_ITEM_TYPE, String.valueOf(CommonDataKinds.Phone.TYPE_OTHER) })
+        .withValue(CommonDataKinds.Phone.NUMBER, shortPhoneNumber)
         .build());
     }
   }
@@ -259,6 +285,14 @@ public class LocalContactRepository {
         .build());
     }
 
+    // Short phone
+    String shortPhoneNumber = getShortPhoneNumber(remoteContact);
+    if (shortPhoneNumber != null) {
+      ops.add(buildShortPhoneNumberInsert(shortPhoneNumber)
+        .withValueBackReference(Data.RAW_CONTACT_ID, backReferenceIndex)
+        .build());
+    }
+
     // Photo
     if (photo != null) {
       ops.add(buildPhotoInsert(photo)
@@ -307,6 +341,13 @@ public class LocalContactRepository {
       .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_WORK);
   }
 
+  private ContentProviderOperation.Builder buildShortPhoneNumberInsert(String shortPhoneNumber) {
+    return ContentProviderOperation.newInsert(DATA_CONTENT_URI)
+      .withValue(Data.MIMETYPE, CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+      .withValue(CommonDataKinds.Phone.NUMBER, shortPhoneNumber)
+      .withValue(CommonDataKinds.Phone.TYPE, CommonDataKinds.Phone.TYPE_OTHER);
+  }
+
   private ContentProviderOperation.Builder buildPhotoInsert(ByteArrayOutputStream photo) {
     return ContentProviderOperation.newInsert(DATA_CONTENT_URI)
       .withValue(Data.MIMETYPE, CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
@@ -315,6 +356,14 @@ public class LocalContactRepository {
 
   private boolean nullOrEmpty(String s) {
     return s == null || s.isEmpty();
+  }
+
+  private String getShortPhoneNumber(UserInfoResponse remoteContact) {
+    if (!"se".equals(remoteContact.countryCode)) return null; // Don't sync short numbers for non-SE contacts
+    if (remoteContact.phoneNumber == null) return null;
+    String phoneNumber = remoteContact.phoneNumber.replaceAll(" ", "");
+    if (phoneNumber.length() < 4) return null;
+    return phoneNumber.substring(phoneNumber.length() - 4);
   }
 
   private void deleteInactiveContact(LocalContact localContact) {

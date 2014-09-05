@@ -65,6 +65,7 @@ public class LocalContactReader {
           if (CommonDataKinds.Email.CONTENT_ITEM_TYPE.equals(mimeType)) contact.email = cursor.getString(3);
           if (CommonDataKinds.Phone.CONTENT_ITEM_TYPE.equals(mimeType) && CommonDataKinds.Phone.TYPE_WORK_MOBILE == subType) contact.phoneNumber = cursor.getString(3);
           if (CommonDataKinds.Phone.CONTENT_ITEM_TYPE.equals(mimeType) && CommonDataKinds.Phone.TYPE_WORK == subType) contact.fixedPhoneNumber = cursor.getString(3);
+          if (CommonDataKinds.Phone.CONTENT_ITEM_TYPE.equals(mimeType) && CommonDataKinds.Phone.TYPE_OTHER == subType) contact.shortPhoneNumber = cursor.getString(3);
         }
       }
 

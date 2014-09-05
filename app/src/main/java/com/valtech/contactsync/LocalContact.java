@@ -7,5 +7,6 @@ public class LocalContact {
   public String email;
   public String phoneNumber;
   public String fixedPhoneNumber;
+  public String shortPhoneNumber;
   public String photoLastModified;
 }
