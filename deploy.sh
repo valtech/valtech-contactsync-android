@@ -6,4 +6,4 @@ set +e
 ./gradlew assembleRelease
 rm valtech.keystore
 set -e
-cp app/build/apk/app-release.apk $CIRCLE_ARTIFACTS
+cp app/build/outputs/apk/app-release.apk $CIRCLE_ARTIFACTS
