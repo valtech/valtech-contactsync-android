@@ -47,7 +47,7 @@ public class SignInActivity extends AccountAuthenticatorActivity {
       progressDialog = new ProgressDialog(SignInActivity.this);
       progressDialog.setIndeterminate(true);
       progressDialog.setCanceledOnTouchOutside(false);
-      progressDialog.setMessage("Completing sign in to Valtech IDP...");
+      progressDialog.setMessage(getString(R.string.finalizing_sign_in));
       progressDialog.show();
     }
 

@@ -16,4 +16,5 @@
     <string name="sign_in_completed_success_text">Account %s was added to the device, sync will start automatically.\n\nTo view status and change sync settings, go to Android Settings and choose the Valtech account in the list (just as for any other account).</string>
     <string name="sign_in_completed_error_header">Sign in failed</string>
     <string name="sign_in_completed_error_text">An error occurred communicating with Valtech IDP. Try again later.\n\nIf the error persists please contact intranet.support@valtech.se.</string>
+    <string name="finalizing_sign_in">Completing sign in to Valtech IDP...</string>
 </resources>

@@ -15,4 +15,5 @@
     <string name="sign_in_completed_success_text">Kontot %s har lagts till på enheten, synk kommer att startas automatiskt.\n\nFör att se status och ändra synkinställningar, gå till Android-inställningar och välj Valtech-kontot i listan (precis som för andra konton).</string>
     <string name="sign_in_completed_error_header">Inloggning misslyckades</string>
     <string name="sign_in_completed_error_text">Ett fel inträffade i kommunikationen med Valtech IDP. Försök igen senare.\n\nOm felet kvarstår, kontakta intranet.support@valtech.se.</string>
+    <string name="finalizing_sign_in">Fullbordar inloggning via Valtech IDP...</string>
 </resources>
