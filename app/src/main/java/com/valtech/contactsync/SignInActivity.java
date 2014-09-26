@@ -3,15 +3,13 @@ package com.valtech.contactsync;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
-import android.widget.Toast;
 import com.valtech.contactsync.api.ApiClient;
 import com.valtech.contactsync.api.OAuthException;
 import com.valtech.contactsync.api.UserInfoResponse;
@@ -42,6 +40,17 @@ public class SignInActivity extends AccountAuthenticatorActivity {
   }
 
   private class SignInTask extends AsyncTask<String, Void, Bundle> {
+    private ProgressDialog progressDialog;
+
+    @Override
+    protected void onPreExecute() {
+      progressDialog = new ProgressDialog(SignInActivity.this);
+      progressDialog.setIndeterminate(true);
+      progressDialog.setCanceledOnTouchOutside(false);
+      progressDialog.setMessage("Completing sign in to Valtech IDP...");
+      progressDialog.show();
+    }
+
     @Override
     protected Bundle doInBackground(String... params) {
       try {
@@ -89,25 +98,15 @@ public class SignInActivity extends AccountAuthenticatorActivity {
 
     @Override
     protected void onPostExecute(final Bundle result) {
-      if (result.containsKey(AccountManager.KEY_ERROR_CODE)) {
-        new AlertDialog.Builder(SignInActivity.this)
-          .setIcon(android.R.drawable.ic_dialog_alert)
-          .setTitle(R.string.error)
-          .setMessage(R.string.auth_error_message)
-          .setNeutralButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-              SignInActivity.this.setAccountAuthenticatorResult(result);
-              SignInActivity.this.finish();
-            }
-          })
-          .show();
-      } else {
-        String accountName = result.getString(AccountManager.KEY_ACCOUNT_NAME);
-        Toast.makeText(SignInActivity.this, String.format(getString(R.string.account_added_toast), accountName), Toast.LENGTH_LONG).show();
-        SignInActivity.this.setAccountAuthenticatorResult(result);
-        SignInActivity.this.finish();
-      }
+      progressDialog.dismiss();
+
+      SignInActivity.this.setAccountAuthenticatorResult(result);
+
+      Intent intent = new Intent(SignInActivity.this, SignInCompleteActivity.class);
+      intent.putExtra("error", result.containsKey(AccountManager.KEY_ERROR_CODE));
+      intent.putExtra("email", result.getString(AccountManager.KEY_ACCOUNT_NAME));
+      startActivity(intent);
+      SignInActivity.this.finish();
     }
   }
 }
