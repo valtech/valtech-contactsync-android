@@ -17,7 +17,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name="com.valtech.contactsync.SignInActivity"
+            android:name=".SignInActivity"
             android:label="@string/app_name"
             android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
@@ -40,7 +40,7 @@
             android:name=".SignInCompleteActivity"
             android:label="@string/app_name" />
 
-        <service android:name="com.valtech.contactsync.AuthenticatorService">
+        <service android:name=".AuthenticatorService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -50,7 +50,7 @@
         </service>
 
         <service
-            android:name="com.valtech.contactsync.SyncAdapterService"
+            android:name=".SyncAdapterService"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
