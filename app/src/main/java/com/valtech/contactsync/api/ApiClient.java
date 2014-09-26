@@ -1,6 +1,7 @@
 package com.valtech.contactsync.api;
 
 import android.content.Context;
+import android.net.Uri;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
@@ -46,8 +47,8 @@ public class ApiClient {
     this.followUpScope = context.getString(R.string.idp_follow_up_scope);
   }
 
-  public String getAuthorizeUrl() {
-    return authorizeUrl + "?response_type=code&client_id=" + clientId + "&scope=" + initialScope.replace(" ", "%20");
+  public Uri getAuthorizeUrl() {
+    return Uri.parse(authorizeUrl + "?response_type=code&client_id=" + clientId + "&scope=" + initialScope.replace(" ", "%20"));
   }
 
   public TokenResponse getAccessTokenAndRefreshToken(String code) {

@@ -11,7 +11,8 @@
     <string name="account_preferences_title">Länder att synka</string>
     <string name="account_preferences_summary">Från vilka länder kontakter ska hämtas</string>
     <string name="group_title_format">Valtech %s</string>
-    <string name="error">Fel</string>
-    <string name="ok">OK</string>
-    <string name="auth_error_message">Ett fel har inträffat vid kommunikation med Valtech IDP. Vänligen kontakta intranet.support@valtech.se.</string>
+    <string name="sign_in_completed_success_header">Inloggning lyckades</string>
+    <string name="sign_in_completed_success_text">Kontot %s har lagts till på enheten, synk kommer att startas automatiskt.\n\nFör att se status och ändra synkinställningar, gå till Android-inställningar och välj Valtech-kontot i listan (precis som för andra konton).</string>
+    <string name="sign_in_completed_error_header">Inloggning misslyckades</string>
+    <string name="sign_in_completed_error_text">Ett fel inträffade i kommunikationen med Valtech IDP. Försök igen senare.\n\nOm felet kvarstår, kontakta intranet.support@valtech.se.</string>
 </resources>

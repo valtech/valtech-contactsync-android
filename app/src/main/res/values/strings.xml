@@ -12,7 +12,8 @@
     <string name="account_preferences_title">Countries to sync</string>
     <string name="account_preferences_summary">From which countries should contacts be fetched</string>
     <string name="group_title_format">Valtech %s</string>
-    <string name="error">Error</string>
-    <string name="ok">OK</string>
-    <string name="auth_error_message">An error occurred communicating with Valtech IDP. Please contact intranet.support@valtech.se.</string>
+    <string name="sign_in_completed_success_header">Sign in completed</string>
+    <string name="sign_in_completed_success_text">Account %s was added to the device, sync will start automatically.\n\nTo view status and change sync settings, go to Android Settings and choose the Valtech account in the list (just as for any other account).</string>
+    <string name="sign_in_completed_error_header">Sign in failed</string>
+    <string name="sign_in_completed_error_text">An error occurred communicating with Valtech IDP. Try again later.\n\nIf the error persists please contact intranet.support@valtech.se.</string>
 </resources>
