@@ -15,6 +15,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.util.EntityUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -130,6 +131,9 @@ public class ApiClient {
     HttpClient httpClient = new DefaultHttpClient();
     HttpGet request = new HttpGet(url);
     if (lastModified != null) request.setHeader("If-Modified-Since", lastModified);
+
+    // Gravatar requires a User-Agent otherwise we get 403, anything will do
+    httpClient.getParams().setParameter(CoreProtocolPNames.USER_AGENT, System.getProperty("http.agent"));
 
     HttpResponse response = httpClient.execute(request);
     BinaryResponse binaryResponse = new BinaryResponse();
