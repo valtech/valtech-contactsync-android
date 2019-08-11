@@ -21,6 +21,12 @@ jobs:
             - ~/.gradle
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
+          name:
+          command: |
+            cp idp.xml.template app/src/main/res/values/idp.xml
+            sed -i "s/stage-id.valtech.com/id.valtech.com/g" app/src/main/res/values/idp.xml
+            sed -i "s/CLIENT_SECRET_HERE/$IDP_CLIENT_SECRET/g" app/src/main/res/values/idp.xml
+      - run:
           name: Run Tests
           #command: ./gradlew lint test # TODO: Enable linting
           command: ./gradlew test
