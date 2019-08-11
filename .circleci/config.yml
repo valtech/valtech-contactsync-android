@@ -30,21 +30,20 @@ jobs:
           name: Run Tests
           #command: ./gradlew lint test # TODO: Enable linting
           command: ./gradlew test
+      - store_artifacts:
+          path: app/build/reports
+          destination: reports
+      - store_test_results:
+          path: app/build/test-results
       - run:
           name: Assemble app (debug)
           command: ./gradlew assembleDebug
-      - store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
-          path: app/build/reports
-          destination: reports
-      - store_test_results: # for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
-          path: app/build/test-results
-      - run:
+      - run: # TODO: Only build release apk on master branch
           name: Assemble app (release)
           command: |
             echo $VALTECH_KEYSTORE | base64 --decode > valtech.keystore
             ./gradlew assembleRelease
             rm valtech.keystore
       - store_artifacts:
-          path: app/build/outputs/apk/app-release.apk
+          path: app/build/outputs/apk
           destination: apks
-
