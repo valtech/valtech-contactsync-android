@@ -1,14 +1,16 @@
 buildscript {
     repositories {
-        mavenCentral()
+        google()
+        jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.12.1'
+        classpath 'com.android.tools.build:gradle:3.4.2'
     }
 }
 
 allprojects {
     repositories {
-        mavenCentral()
+        google()
+        jcenter()
     }
 }
