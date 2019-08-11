@@ -30,6 +30,12 @@ jobs:
           name: Run Tests
           #command: ./gradlew lint test # TODO: Enable linting
           command: ./gradlew test
+      - run:
+          name: Assemble app (debug)
+          command: ./gradlew assembleDebug
+      - store_artifacts:
+          path: app/build/outputs/apk/debug
+          destination: apks
       - store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
           path: app/build/reports
           destination: reports
